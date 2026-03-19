@@ -41,3 +41,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# firebase
+servisv-app-firebase-adminsdk-fbsvc-5fd240a444.json
+# google-services.json is committed so EAS Build can access it

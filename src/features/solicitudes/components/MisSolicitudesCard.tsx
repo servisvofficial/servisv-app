@@ -28,7 +28,7 @@ export function MisSolicitudesCard({ totalSolicitudes, abiertas, completadas }: 
       
       <TouchableOpacity 
         className="flex-row items-center justify-between"
-        onPress={() => router.push('/(tabs)/trabajos')}
+        onPress={() => router.push('/(protected)/(mainTabs)/trabajos')}
       >
         <Text className="text-base font-semibold text-purple-600">Ver Solicitudes</Text>
         <IconSymbol name="arrow.right" size={20} color="#9333EA" />

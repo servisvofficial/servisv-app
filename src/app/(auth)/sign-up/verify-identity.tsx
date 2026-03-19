@@ -1,8 +1,7 @@
-import VerifyIdentity from '@/features/auth/sign-up/components/VerifyIdentity';
+import VerifyIdentity from "@/features/auth/components/sign-up/components/VerifyIdentity";
 
 const VerifyIdentityScreen = () => {
   return <VerifyIdentity />;
 };
 
 export default VerifyIdentityScreen;
-
