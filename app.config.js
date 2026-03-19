@@ -1,3 +1,5 @@
+const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY ?? "";
+
 export default {
   expo: {
     name: "ServiSV",
@@ -16,6 +18,9 @@ export default {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.servisv.app",
+      config: {
+        googleMapsApiKey,
+      },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSLocationWhenInUseUsageDescription:
@@ -30,6 +35,11 @@ export default {
     },
     android: {
       googleServicesFile: "./google-services.json",
+      config: {
+        googleMaps: {
+          apiKey: googleMapsApiKey,
+        },
+      },
       permissions: [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -38,10 +48,8 @@ export default {
         "WRITE_EXTERNAL_STORAGE",
       ],
       adaptiveIcon: {
-        backgroundColor: "#E6F4FE",
-        foregroundImage: "./assets/images/android-icon-foreground.png",
-        backgroundImage: "./assets/images/android-icon-background.png",
-        monochromeImage: "./assets/images/android-icon-monochrome.png",
+        foregroundImage: "./assets/images/icon.png",
+        backgroundColor: "#FFFFFF",
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
@@ -66,9 +74,9 @@ export default {
           image: "./assets/images/splash-icon.png",
           imageWidth: 200,
           resizeMode: "contain",
-          backgroundColor: "#3B82F6",
+          backgroundColor: "#FFFFFF",
           dark: {
-            backgroundColor: "#1E40AF",
+            backgroundColor: "#FFFFFF",
           },
         },
       ],

@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { validateDUI, validateNIT } from "@/common/services/paymentCalculations";
 import type { FiscalData } from "@/common/types/fiscal";
 import {
@@ -93,6 +94,7 @@ export function FiscalFormModal({
   isLoading = false,
   embedded = false,
 }: FiscalFormModalProps) {
+  const insets = useSafeAreaInsets();
   const [tipoPersona, setTipoPersona] = useState<"natural" | "juridica">(
     initialData?.tipo_persona || "natural"
   );
@@ -250,7 +252,10 @@ export function FiscalFormModal({
 
             <ScrollView
               style={{ flex: 1 }}
-              contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
+              contentContainerStyle={{
+                padding: 20,
+                paddingBottom: Math.max(insets.bottom, 12) + 28,
+              }}
               showsVerticalScrollIndicator={false}
             >
               <Text className="text-sm mb-4" style={{ color: "#6B7280" }}>
