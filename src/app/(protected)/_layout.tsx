@@ -31,6 +31,12 @@ const ProtectedLayout = () => {
           presentation: "fullScreenModal",
         }}
       />
+      <Stack.Screen
+        name="notificaciones"
+        options={{
+          presentation: "fullScreenModal",
+        }}
+      />
     </Stack>
   );
 };

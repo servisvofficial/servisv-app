@@ -13,5 +13,9 @@ export {
   usePushNotifications,
   registerForPushNotificationsAsync,
   saveExpoPushTokenToBackend,
+  getStoredNotifications,
+  markAllNotificationsAsRead,
+  clearStoredNotifications,
+  type StoredNotification,
 } from './usePushNotifications';
 

@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  TextInput,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -18,6 +19,34 @@ import { RequestStatusBadge } from "@/features/solicitudes/components/RequestSta
 import { MyView } from "@/common/components";
 import { getCategoryIcon } from "@/common/utils/categoryIcons";
 
+type SearchableRequest = {
+  title?: string;
+  description?: string;
+  serviceCategory?: string;
+  location?: string | { address?: string };
+};
+
+function requestMatchesSearch(request: SearchableRequest, query: string): boolean {
+  if (!query.trim()) return true;
+  const normalized = query.trim().toLowerCase();
+  const locationText =
+    typeof request.location === "string"
+      ? request.location
+      : request.location?.address ?? "";
+
+  const haystack = [
+    request.title,
+    request.description,
+    request.serviceCategory,
+    locationText,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return haystack.includes(normalized);
+}
+
 // Vista para Cliente
 function TrabajosCliente() {
   const router = useRouter();
@@ -26,6 +55,8 @@ function TrabajosCliente() {
   const [filtro, setFiltro] = useState<
     "abiertas" | "en_progreso" | "completadas" | "canceladas"
   >("abiertas");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Calcular padding bottom para que el contenido llegue hasta el borde de las tabs
   const scrollViewPaddingBottom = 70 + Math.max(insets.bottom, 8); // Solo la altura del tab bar, sin extra
@@ -43,14 +74,17 @@ function TrabajosCliente() {
     status: statusMap[filtro],
   });
 
-  // Filtrar solicitudes según el filtro seleccionado
-  const solicitudesFiltradas = solicitudesData.filter(s => {
+  // Filtrar solicitudes según estado + búsqueda
+  const solicitudesPorEstado = solicitudesData.filter(s => {
     if (filtro === "abiertas") return s.status === "open" || s.status === "quoted";
     if (filtro === "en_progreso") return s.status === "accepted" || s.status === "in_progress";
     if (filtro === "completadas") return s.status === "completed";
     if (filtro === "canceladas") return s.status === "cancelled";
     return false;
   });
+  const solicitudesFiltradas = solicitudesPorEstado.filter((s) =>
+    requestMatchesSearch(s, searchQuery)
+  );
 
   const tabs = [
     { key: "abiertas", label: "Abiertas" },
@@ -92,9 +126,15 @@ function TrabajosCliente() {
           <Text className="text-2xl font-bold" style={{ color: colors.text }}>
             Mis Solicitudes
           </Text>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              if (isSearchOpen) setSearchQuery("");
+              setIsSearchOpen((prev) => !prev);
+            }}
+            activeOpacity={0.7}
+          >
             <MaterialIcons
-              name="search"
+              name={isSearchOpen ? "close" : "search"}
               size={24}
               color={colors.textSecondary}
             />
@@ -134,6 +174,40 @@ function TrabajosCliente() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {isSearchOpen && (
+          <View
+            className="px-5 py-3 border-b"
+            style={{
+              backgroundColor: colors.card,
+              borderBottomColor: colors.border,
+            }}
+          >
+            <View
+              className="flex-row items-center rounded-xl px-3 py-2"
+              style={{
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+                borderWidth: 1,
+              }}
+            >
+              <MaterialIcons name="search" size={20} color={colors.textSecondary} />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Buscar por título, categoría o ubicación"
+                placeholderTextColor={colors.textSecondary}
+                className="flex-1 ml-2 text-base"
+                style={{ color: colors.text }}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery("")} activeOpacity={0.7}>
+                  <MaterialIcons name="close" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
 
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -291,6 +365,8 @@ function TrabajosProveedor() {
   const [filtro, setFiltro] = useState<
     "abiertas" | "en_progreso" | "completadas" | "canceladas"
   >("abiertas");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Calcular padding bottom para que el contenido llegue hasta el borde de las tabs
   const scrollViewPaddingBottom = 70 + Math.max(insets.bottom, 8); // Solo la altura del tab bar, sin extra
@@ -309,14 +385,17 @@ function TrabajosProveedor() {
     status: statusMap[filtro],
   });
 
-  // Filtrar solicitudes según el filtro seleccionado
-  const solicitudesFiltradas = solicitudesData.filter(s => {
+  // Filtrar solicitudes según estado + búsqueda
+  const solicitudesPorEstado = solicitudesData.filter(s => {
     if (filtro === "abiertas") return s.status === "open" || s.status === "quoted";
     if (filtro === "en_progreso") return s.status === "accepted" || s.status === "in_progress";
     if (filtro === "completadas") return s.status === "completed";
     if (filtro === "canceladas") return s.status === "cancelled";
     return false;
   });
+  const solicitudesFiltradas = solicitudesPorEstado.filter((s) =>
+    requestMatchesSearch(s, searchQuery)
+  );
 
   const tabs = [
     { key: "abiertas", label: "Abiertas" },
@@ -358,9 +437,15 @@ function TrabajosProveedor() {
           <Text className="text-2xl font-bold" style={{ color: colors.text }}>
             Mis Solicitudes
           </Text>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              if (isSearchOpen) setSearchQuery("");
+              setIsSearchOpen((prev) => !prev);
+            }}
+            activeOpacity={0.7}
+          >
             <MaterialIcons
-              name="search"
+              name={isSearchOpen ? "close" : "search"}
               size={24}
               color={colors.textSecondary}
             />
@@ -400,6 +485,40 @@ function TrabajosProveedor() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {isSearchOpen && (
+          <View
+            className="px-5 py-3 border-b"
+            style={{
+              backgroundColor: colors.card,
+              borderBottomColor: colors.border,
+            }}
+          >
+            <View
+              className="flex-row items-center rounded-xl px-3 py-2"
+              style={{
+                backgroundColor: colors.background,
+                borderColor: colors.border,
+                borderWidth: 1,
+              }}
+            >
+              <MaterialIcons name="search" size={20} color={colors.textSecondary} />
+              <TextInput
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Buscar por título, categoría o ubicación"
+                placeholderTextColor={colors.textSecondary}
+                className="flex-1 ml-2 text-base"
+                style={{ color: colors.text }}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery("")} activeOpacity={0.7}>
+                  <MaterialIcons name="close" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
 
         <ScrollView
           showsVerticalScrollIndicator={false}
