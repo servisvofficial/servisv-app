@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@clerk/clerk-expo";
 import { supabase } from "@/common/lib/supabase/supabaseClient";
 
@@ -15,6 +16,74 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+const NOTIFICATIONS_INBOX_KEY = "servisv_notifications_inbox_v1";
+const MAX_STORED_NOTIFICATIONS = 100;
+
+export type StoredNotification = {
+  id: string;
+  title: string;
+  body: string;
+  data: Record<string, unknown> | null;
+  receivedAt: string;
+  read: boolean;
+};
+
+function toStoredNotification(
+  notification: Notifications.Notification,
+  read = false
+): StoredNotification {
+  const content = notification.request.content;
+  return {
+    id: notification.request.identifier,
+    title: content.title ?? "Notificación",
+    body: content.body ?? "",
+    data: (content.data as Record<string, unknown>) ?? null,
+    receivedAt: new Date().toISOString(),
+    read,
+  };
+}
+
+export async function getStoredNotifications(): Promise<StoredNotification[]> {
+  try {
+    const raw = await AsyncStorage.getItem(NOTIFICATIONS_INBOX_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as StoredNotification[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch (error) {
+    console.warn("[PushNotifications] No se pudieron leer notificaciones:", error);
+    return [];
+  }
+}
+
+async function saveStoredNotifications(items: StoredNotification[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(NOTIFICATIONS_INBOX_KEY, JSON.stringify(items));
+  } catch (error) {
+    console.warn("[PushNotifications] No se pudieron guardar notificaciones:", error);
+  }
+}
+
+export async function addNotificationToInbox(
+  notification: Notifications.Notification,
+  read = false
+): Promise<void> {
+  const current = await getStoredNotifications();
+  const mapped = toStoredNotification(notification, read);
+  const deduped = current.filter((item) => item.id !== mapped.id);
+  await saveStoredNotifications([mapped, ...deduped].slice(0, MAX_STORED_NOTIFICATIONS));
+}
+
+export async function markAllNotificationsAsRead(): Promise<void> {
+  const current = await getStoredNotifications();
+  if (!current.length) return;
+  await saveStoredNotifications(current.map((item) => ({ ...item, read: true })));
+}
+
+export async function clearStoredNotifications(): Promise<void> {
+  await saveStoredNotifications([]);
+}
 
 function handleRegistrationError(errorMessage: string) {
   console.warn("[PushNotifications]", errorMessage);
@@ -112,11 +181,13 @@ export function usePushNotifications() {
 
     notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
       setLastNotification(notification);
+      void addNotificationToInbox(notification);
     });
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
       // Opcional: navegar según response.notification.request.content.data (ej. requestId, chatId)
       console.log("[PushNotifications] Respuesta a notificación:", response.notification.request.content.data);
+      void addNotificationToInbox(response.notification, true);
     });
 
     return () => {

@@ -8,6 +8,7 @@ import {
 import { useRouter } from "expo-router";
 import { useState, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -39,6 +40,7 @@ const OnboardingSlides = () => {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
 
   const handleNext = () => {
     if (currentIndex < SLIDES.length - 1) {
@@ -62,7 +64,7 @@ const OnboardingSlides = () => {
       style={{ flex: 1 }}
     >
       {/* Skip Button */}
-      <View className="absolute top-12 right-6 z-20">
+      <View className="absolute right-6 z-20" style={{ top: insets.top + 8 }}>
         <TouchableOpacity onPress={handleSkip} className="p-2">
           <Text className="text-gray-400 text-sm font-medium">Omitir</Text>
         </TouchableOpacity>
@@ -84,8 +86,8 @@ const OnboardingSlides = () => {
         {SLIDES.map(slide => (
           <View
             key={slide.id}
-            style={{ width }}
-            className="flex-1 items-center justify-between pt-20 pb-10 px-8"
+            className="flex-1 items-center justify-between px-8"
+            style={{ width, paddingTop: insets.top + 36, paddingBottom: insets.bottom + 8 }}
           >
             {/* Image/Illustration Container */}
             <View className="flex-1 items-center justify-center w-full">
@@ -114,7 +116,7 @@ const OnboardingSlides = () => {
       </ScrollView>
 
       {/* Bottom Section */}
-      <View className="pb-12 px-8">
+      <View className="px-8" style={{ paddingBottom: insets.bottom + 16 }}>
         {/* Dots */}
         <View className="flex-row justify-center items-center mb-6">
           {SLIDES.map((_, index) => (

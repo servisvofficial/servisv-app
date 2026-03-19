@@ -1,8 +1,10 @@
 import { IconSymbol } from "@/common/components/ui/IconSymbol";
-import { useUserData } from "@/common/hooks";
+import { getStoredNotifications, useUserData } from "@/common/hooks";
 import { useTheme } from "@/common/providers/ThemeProvider";
 import { getUserInitials } from "@/common/utils/userHelpers";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -27,9 +29,24 @@ export function Header({
   const insets = useSafeAreaInsets();
   const { user, isLoading } = useUserData();
   const { colors } = useTheme();
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const initials = getUserInitials(user?.name, user?.last_name);
   const profilePic = user?.profile_pic;
+
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      (async () => {
+        const notifications = await getStoredNotifications();
+        if (!mounted) return;
+        setUnreadCount(notifications.filter((item) => !item.read).length);
+      })();
+      return () => {
+        mounted = false;
+      };
+    }, [])
+  );
 
   return (
     <View
@@ -53,13 +70,19 @@ export function Header({
 
       <View className="flex-row items-center gap-4">
         {mostrarNotificaciones && (
-          <TouchableOpacity className="relative">
+          <TouchableOpacity
+            className="relative"
+            onPress={() => router.push("/(protected)/notificaciones" as any)}
+            activeOpacity={0.7}
+          >
             <IconSymbol
               name="bell.fill"
               size={24}
               color={colors.textSecondary}
             />
-            <View className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+            {unreadCount > 0 && (
+              <View className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+            )}
           </TouchableOpacity>
         )}
 

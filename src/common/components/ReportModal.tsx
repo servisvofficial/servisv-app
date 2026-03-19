@@ -14,6 +14,7 @@ import {
   Platform,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createReport, mapReasonToEnum } from "@/common/services/reports";
 import { useTheme } from "@/common/providers/ThemeProvider";
 
@@ -56,6 +57,7 @@ export function ReportModal({
   reporterId,
 }: ReportModalProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [additionalComments, setAdditionalComments] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -135,7 +137,7 @@ export function ReportModal({
                 borderTopLeftRadius: 20,
                 borderTopRightRadius: 20,
                 padding: 24,
-                paddingBottom: 32,
+                paddingBottom: Math.max(insets.bottom, 12) + 20,
                 maxHeight: "85%",
               }}
             >
