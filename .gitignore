@@ -45,3 +45,9 @@ app-example
 # firebase
 servisv-app-firebase-adminsdk-fbsvc-5fd240a444.json
 # google-services.json is committed so EAS Build can access it
+
+# env
+.env.local
+
+# android
+android/
