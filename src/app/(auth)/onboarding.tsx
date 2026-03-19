@@ -1,4 +1,4 @@
-import OnboardingSlides from '@/features/auth/onboarding/components/OnboardingSlides';
+import OnboardingSlides from "@/features/auth/components/onboarding/components/OnboardingSlides";
 
 const OnboardingScreen = () => {
   return <OnboardingSlides />;

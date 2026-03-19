@@ -1,0 +1,51 @@
+import * as FileSystem from 'expo-file-system/legacy';
+import { supabase } from "../lib/supabase/supabaseClient";
+
+export const postFileToSupabase = async (
+  fileUri: string,
+  storagePath: string,
+  mimeType: string,
+  bucket: string
+) => {
+  try {
+    // Leer el archivo como base64 usando expo-file-system (legacy API)
+    const base64 = await FileSystem.readAsStringAsync(fileUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+
+    // Subir el archivo usando Uint8Array
+    const { error } = await supabase.storage
+      .from(bucket)
+      .upload(storagePath, byteArray, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: mimeType,
+      });
+
+    if (error) {
+      console.error("Error al subir el archivo:", error);
+      return "";
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(storagePath);
+
+    if (publicUrlData && publicUrlData.publicUrl) {
+      return publicUrlData.publicUrl;
+    } else {
+      console.error("Error", "No se pudo obtener la URL pública del archivo.");
+      return "";
+    }
+  } catch (uploadError: any) {
+    console.error("Error en el proceso de subida:", uploadError);
+    return "";
+  }
+};

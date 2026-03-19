@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { IconSymbol } from '@/common/components/ui/IconSymbol';
 import { Button } from '@/common/components';
 
@@ -7,6 +8,16 @@ interface NuevaSolicitudCardProps {
 }
 
 export function NuevaSolicitudCard({ onPress }: NuevaSolicitudCardProps) {
+  const router = useRouter();
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else {
+      router.push('/crear-solicitud');
+    }
+  };
+
   return (
     <View className="mx-5 my-3 p-5 bg-blue-50 rounded-2xl border border-blue-100">
       <View className="flex-row items-center mb-3">
@@ -20,7 +31,7 @@ export function NuevaSolicitudCard({ onPress }: NuevaSolicitudCardProps) {
         Publica una nueva solicitud de servicio
       </Text>
       
-      <Button titulo="Crear Solicitud" onPress={onPress} />
+      <Button titulo="Crear Solicitud" onPress={handlePress} />
     </View>
   );
 }

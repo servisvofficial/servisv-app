@@ -20,7 +20,7 @@ export function ExplorarServiciosCard() {
       
       <TouchableOpacity 
         className="w-full py-3 bg-white rounded-xl items-center justify-center border border-green-200"
-        onPress={() => router.push('/(tabs)/servicios')}
+        onPress={() => router.push('/(protected)/(mainTabs)/servicios')}
         activeOpacity={0.8}
       >
         <Text className="text-base font-semibold text-green-600">Ver Servicios →</Text>

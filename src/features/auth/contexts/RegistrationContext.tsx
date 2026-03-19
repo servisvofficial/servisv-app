@@ -2,19 +2,29 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type UserType = 'client' | 'provider';
 
+interface SelectedCategory {
+  categoryId: number;
+  categoryName: string;
+  selectedSubcategories: string[];
+}
+
 interface RegistrationData {
   userType: UserType | null;
   nombre: string;
   apellido: string;
   email: string;
   dui: string;
+  telefono?: string;
   password: string;
   tipoVivienda?: string;
   direccion?: string;
+  latitude?: number;
+  longitude?: number;
   solvenciaPolicial?: string | null;
   duiFrontal?: string | null;
   duiReverso?: string | null;
-  servicios?: string[];
+  professionalCredential?: string | null;
+  selectedCategories?: SelectedCategory[];
   ubicacion?: string;
   radioServicio?: number;
   nombreBanco?: string;
