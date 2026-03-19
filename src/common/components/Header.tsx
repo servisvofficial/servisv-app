@@ -40,7 +40,7 @@ export function Header({
       (async () => {
         const notifications = await getStoredNotifications();
         if (!mounted) return;
-        setUnreadCount(notifications.filter((item) => !item.read).length);
+        setUnreadCount(notifications.filter(item => !item.read).length);
       })();
       return () => {
         mounted = false;
@@ -57,12 +57,22 @@ export function Header({
         paddingTop: insets.top + 16,
       }}
     >
-      <View className="flex-row items-center gap-1">
-        <Image
-          source={require("../../../assets/images/splash-icon.png")}
-          className="w-14 h-14"
-          resizeMode="contain"
-        />
+      <View className="flex-row items-center gap-4">
+        {/* Icono redondeado (clip) */}
+        <View
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 16,
+            overflow: "hidden",
+          }}
+        >
+          <Image
+            source={require("../../../assets/images/splash-icon.png")}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+        </View>
         <Text className="text-2xl font-bold" style={{ color: colors.text }}>
           {titulo}
         </Text>

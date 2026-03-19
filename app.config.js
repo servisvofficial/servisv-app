@@ -80,7 +80,12 @@ export default {
           },
         },
       ],
-      ["expo-notifications"],
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/push-notification-icon.png",
+        }
+      ],
     ],
     experiments: {
       typedRoutes: true,
