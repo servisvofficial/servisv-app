@@ -6,7 +6,7 @@ export interface Provider {
   cel_phone?: string;
   location?: string;
   coordinates?: { lat: number; lng: number };
-  service_radius?: number; // Radio de servicio en kilómetros
+  service_radius?: number | null; // Radio de servicio en kilómetros (null = no configurado)
   profile_pic?: string;
   service_categories?: Array<{ category: string; subcategories?: string[] }>;
   is_provider: boolean;

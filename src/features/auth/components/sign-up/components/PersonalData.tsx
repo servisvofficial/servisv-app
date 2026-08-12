@@ -149,7 +149,7 @@ const PersonalData = () => {
             <CustomInput
               control={control}
               name="password"
-              placeholder="Mínimo 8 caracteres, 1 mayúscula y 1 número"
+              placeholder="Ej: MiContraseñaSegura123!"
               secureTextEntry={!showPassword}
               autoCapitalize="none"
               inputClassName="h-12"
@@ -163,6 +163,9 @@ const PersonalData = () => {
                 </TouchableOpacity>
               }
             />
+            <Text className="text-xs text-gray-500 mt-2 ml-1">
+              Debe tener al menos 8 caracteres, incluyendo mayúsculas, minúsculas, números y caracteres especiales (ej. @, #, $, *).
+            </Text>
           </View>
 
           {/* Repetir Contraseña */}

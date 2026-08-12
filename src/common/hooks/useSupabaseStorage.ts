@@ -54,8 +54,8 @@ const useSupabaseStorage = (bucket: string) => {
 
                 return newImgUri;
             } catch (error) {
-                console.log("Error al subir la imagen:", error);
-                return null;
+                console.error("Error al subir la imagen:", error);
+                throw error;
             } finally {
                 setIsLoading(false);
             }
@@ -74,7 +74,7 @@ const useSupabaseStorage = (bucket: string) => {
                     "image/jpeg",
                     "image/jpg",
                 ],
-                copyToCacheDirectory: false,
+                copyToCacheDirectory: true,
             });
 
             if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -98,7 +98,7 @@ const useSupabaseStorage = (bucket: string) => {
             return null;
         } catch (error) {
             console.error("Error al subir el archivo:", error);
-            return null;
+            throw error;
         } finally {
             setIsLoading(false);
         }

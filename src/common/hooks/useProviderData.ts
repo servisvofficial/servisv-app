@@ -13,7 +13,10 @@ export const useProviderData = (providerId: string | undefined) => {
     queryKey: ["providerData", providerId],
     queryFn: () => {
       if (!providerId) return null;
-      return getUserDataInSupabaseById(providerId);
+      return getUserDataInSupabaseById(providerId).then((u) => {
+        if (!u) return null;
+        return (u as any).is_banned ? null : u;
+      });
     },
     enabled: !!providerId,
     staleTime: 5 * 60 * 1000, // 5 minutos

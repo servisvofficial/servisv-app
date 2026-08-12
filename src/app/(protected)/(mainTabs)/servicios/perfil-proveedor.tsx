@@ -95,6 +95,8 @@ export default function PerfilProveedorScreen() {
   const location = provider?.location;
   const serviceRadius = provider?.service_radius;
   const serviceCategories = provider?.service_categories || [];
+  const level = provider?.provider_level;
+  const recurrenceRate = provider?.recurrence_rate || 0;
 
   return (
     <LinearGradient
@@ -159,10 +161,36 @@ export default function PerfilProveedorScreen() {
                   )}
                   <Text className="text-xl font-bold" style={{ color: colors.text }}>{fullName}</Text>
                   {rating > 0 && (
-                    <View className="flex-row items-center mt-2">
+                    <View className="flex-row items-center mt-2 justify-center">
                       <MaterialIcons name="star" size={20} color="#F59E0B" />
                       <Text className="text-base font-semibold ml-1" style={{ color: colors.text }}>
                         {rating.toFixed(1)}
+                      </Text>
+                      {recurrenceRate > 0 && (
+                        <>
+                          <Text className="mx-2 text-gray-300">•</Text>
+                          <MaterialIcons name="refresh" size={16} color="#10B981" />
+                          <Text className="text-sm font-semibold ml-1" style={{ color: "#10B981" }}>
+                            {recurrenceRate}% Recontratación
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                  )}
+                  {level && level !== 'none' && (
+                    <View className="mt-3 px-4 py-1 rounded-full flex-row items-center justify-center border" style={{
+                      backgroundColor: level === 'platino' ? '#F3E8FF' : level === 'oro' ? '#FEF3C7' : '#F1F5F9',
+                      borderColor: level === 'platino' ? '#D8B4FE' : level === 'oro' ? '#FDE68A' : '#E2E8F0',
+                    }}>
+                      <MaterialIcons 
+                        name={level === 'platino' ? 'diamond' : 'military-tech'} 
+                        size={16} 
+                        color={level === 'platino' ? '#9333EA' : level === 'oro' ? '#D97706' : '#64748B'} 
+                      />
+                      <Text className="ml-1 text-sm font-bold capitalize" style={{
+                        color: level === 'platino' ? '#9333EA' : level === 'oro' ? '#D97706' : '#64748B'
+                      }}>
+                        Nivel {level}
                       </Text>
                     </View>
                   )}

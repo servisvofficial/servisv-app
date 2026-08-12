@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Switch,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -56,6 +57,8 @@ export function PaymentModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState("");
   const [showManualClose, setShowManualClose] = useState(false);
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [useLoyaltyPoints, setUseLoyaltyPoints] = useState(false);
 
   const quoteId = payload?.quoteId ?? "";
   const requestId = payload?.requestId ?? "";
@@ -72,9 +75,21 @@ export function PaymentModal({
       setFiscalData(null);
       setMessage("");
       setShowManualClose(false);
+      setUseLoyaltyPoints(false);
       setBreakdown(calculatePaymentBreakdown(serviceAmount));
+      
+      if (payload?.buyerId) {
+        supabase
+          .from("users")
+          .select("loyalty_points_balance")
+          .eq("id", payload.buyerId)
+          .single()
+          .then(({ data }) => {
+            if (data) setLoyaltyPoints(data.loyalty_points_balance || 0);
+          });
+      }
     }
-  }, [visible, payload?.quoteId, serviceAmount]);
+  }, [visible, payload?.quoteId, serviceAmount, payload?.buyerId]);
 
   // Limpiar polling y timer al cerrar el modal o al desmontar
   useEffect(() => {
@@ -119,7 +134,10 @@ export function PaymentModal({
     setMessage("Preparando pago...");
 
     try {
-      const useN1co = breakdown.totalAmount >= WOMPI_MAX_AMOUNT;
+      const pointsDiscount = useLoyaltyPoints ? (loyaltyPoints / 100) : 0;
+      const finalAmount = Math.max(0.01, breakdown.totalAmount - pointsDiscount);
+      
+      const useN1co = finalAmount >= WOMPI_MAX_AMOUNT;
       const paymentGateway = useN1co ? "n1co" : "wompi";
       const redirectUrl = getCallbackUrlForApp();
       const customerEmail = fiscalData.email || userEmail;
@@ -130,7 +148,7 @@ export function PaymentModal({
 
       if (useN1co) {
         const res = await createN1coPayment({
-          amount: breakdown.totalAmount,
+          amount: finalAmount,
           customerEmail,
           reference,
           description: concept || "Servicio",
@@ -142,7 +160,7 @@ export function PaymentModal({
         redirectToUrl = res.data?.redirect_url ?? res.data?.checkout_url;
       } else {
         const res = await createWompiPayment({
-          amountInCents: Math.round(breakdown.totalAmount * 100),
+          amountInCents: Math.round(finalAmount * 100),
           customerEmail,
           reference,
           redirectUrl,
@@ -162,6 +180,7 @@ export function PaymentModal({
         transactionId,
         paymentGateway,
         fiscalData,
+        loyaltyPointsUsed: useLoyaltyPoints ? loyaltyPoints : 0,
       };
       await AsyncStorage.setItem(PENDING_PAYMENT_KEY, JSON.stringify(pendingPaymentData));
 
@@ -361,9 +380,23 @@ export function PaymentModal({
                       </Text>
                     </View>
                   )}
+                  {loyaltyPoints > 0 && (
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 8, borderTopWidth: 1, borderColor: colors.border, marginTop: 8 }}>
+                      <Text style={{ color: colors.text, flex: 1 }}>Usar mis {loyaltyPoints} puntos (-{formatCurrency(loyaltyPoints / 100)})</Text>
+                      <Switch value={useLoyaltyPoints} onValueChange={setUseLoyaltyPoints} />
+                    </View>
+                  )}
+                  {useLoyaltyPoints && (
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 4 }}>
+                      <Text style={{ color: "#10B981" }}>Descuento de puntos:</Text>
+                      <Text style={{ color: "#10B981" }}>-{formatCurrency(loyaltyPoints / 100)}</Text>
+                    </View>
+                  )}
                   <View style={{ flexDirection: "row", justifyContent: "space-between", paddingTop: 12, marginTop: 8, borderTopWidth: 1, borderColor: colors.border }}>
                     <Text style={{ fontWeight: "700", fontSize: 18, color: colors.text }}>Total a Pagar:</Text>
-                    <Text style={{ fontWeight: "700", fontSize: 18, color: colors.text }}>{formatCurrency(breakdown.totalAmount)}</Text>
+                    <Text style={{ fontWeight: "700", fontSize: 18, color: colors.text }}>
+                      {formatCurrency(Math.max(0.01, breakdown.totalAmount - (useLoyaltyPoints ? (loyaltyPoints / 100) : 0)))}
+                    </Text>
                   </View>
                 </View>
 
@@ -441,7 +474,7 @@ export function PaymentModal({
                       ) : (
                         <>
                           <MaterialIcons name="credit-card" size={20} color="#FFF" />
-                          <Text style={{ color: "#FFF", fontWeight: "700" }}>Pagar {formatCurrency(breakdown.totalAmount)}</Text>
+                          <Text style={{ color: "#FFF", fontWeight: "700" }}>Pagar {formatCurrency(Math.max(0.01, breakdown.totalAmount - (useLoyaltyPoints ? (loyaltyPoints / 100) : 0)))}</Text>
                         </>
                       )}
                     </LinearGradient>

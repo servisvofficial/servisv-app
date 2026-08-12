@@ -149,11 +149,22 @@ const LoginForm = () => {
         <View className="flex-1 px-6 justify-center">
           {/* Logo */}
 
-          <Image
-            source={faviconImage}
-            style={{ width: 250, height: 250, alignSelf: "center" }}
-            resizeMode="stretch"
-          />
+          <View
+            style={{
+              width: 180,
+              height: 180,
+              alignSelf: "center",
+              borderRadius: 36,
+              overflow: "hidden",
+              marginBottom: 24,
+            }}
+          >
+            <Image
+              source={faviconImage}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="cover"
+            />
+          </View>
 
           {/* Title */}
           <Text className="text-3xl font-bold text-center text-gray-900 mb-2">
@@ -166,7 +177,7 @@ const LoginForm = () => {
           {/* Email Input */}
           <View className="mb-4">
             <Text className="text-sm text-gray-700 mb-2 font-medium">
-              Correo Electrónico o DUI
+              Correo Electrónico
             </Text>
             <CustomInput
               control={control}

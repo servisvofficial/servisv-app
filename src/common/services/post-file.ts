@@ -25,13 +25,12 @@ export const postFileToSupabase = async (
       .from(bucket)
       .upload(storagePath, byteArray, {
         cacheControl: '3600',
-        upsert: false,
+        upsert: true,
         contentType: mimeType,
       });
 
     if (error) {
-      console.error("Error al subir el archivo:", error);
-      return "";
+      throw new Error(error.message);
     }
 
     const { data: publicUrlData } = supabase.storage
@@ -41,11 +40,10 @@ export const postFileToSupabase = async (
     if (publicUrlData && publicUrlData.publicUrl) {
       return publicUrlData.publicUrl;
     } else {
-      console.error("Error", "No se pudo obtener la URL pública del archivo.");
-      return "";
+      throw new Error("No se pudo obtener la URL pública del archivo.");
     }
   } catch (uploadError: any) {
     console.error("Error en el proceso de subida:", uploadError);
-    return "";
+    throw uploadError;
   }
 };

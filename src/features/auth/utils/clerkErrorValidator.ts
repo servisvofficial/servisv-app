@@ -12,6 +12,10 @@ const errorMessagesClerkES: Record<string, string> = {
   form_username_invalid_length: "El nombre de usuario debe tener entre 3 y 256 caracteres.",
   form_param_max_length_exceeded: "El campo excede la longitud máxima permitida.",
   form_param_min_length_not_met: "El campo no cumple con la longitud mínima requerida.",
+  form_identifier_exists: "Este correo electrónico ya está registrado. Por favor, inicia sesión.",
+  form_password_not_strong_enough: "La contraseña no cumple con los requisitos de seguridad. Añade letras, números y símbolos.",
+  session_exists: "Ya tienes una sesión activa.",
+  form_password_size_in_bytes_exceeded: "La contraseña excede el tamaño máximo permitido."
 };
 
 export const clerkErrorValidator = (error: any) => {
@@ -20,6 +24,7 @@ export const clerkErrorValidator = (error: any) => {
 
   switch (error.meta?.paramName) {
     case 'identifier':
+    case 'email_address':
       errorField = 'email';
       break;
     case 'password':
@@ -36,12 +41,23 @@ export const clerkErrorValidator = (error: any) => {
 
     displayMessage = errorMessagesClerkES[clerkErrorCode] || longMessage || displayMessage;
 
-    if (clerkErrorCode === "form_param_format_invalid" && error.errors[0]?.meta?.paramName) {
-      const specificKey = `form_param_format_invalid_${error.errors[0].meta.paramName}`;
+    if (clerkErrorCode === "form_param_format_invalid" && error.meta?.paramName) {
+      const specificKey = `form_param_format_invalid_${error.meta.paramName}`;
       displayMessage = errorMessagesClerkES[specificKey] || errorMessagesClerkES[clerkErrorCode] || longMessage || displayMessage;
     }
   } else if (error.message) {
     displayMessage = error.message;
+  }
+
+  // Traducción por si el mensaje por defecto (fallback) dice 'is invalid' y no matcheó código
+  if (displayMessage.toLowerCase().includes("is invalid")) {
+     if (errorField === 'email') {
+         displayMessage = "El formato del correo electrónico no es válido.";
+     } else if (errorField === 'password') {
+         displayMessage = "El formato de la contraseña no es válido.";
+     } else {
+         displayMessage = "El formato del campo no es válido.";
+     }
   }
 
   return { errorField, displayMessage };

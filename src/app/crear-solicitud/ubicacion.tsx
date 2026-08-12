@@ -189,7 +189,7 @@ export default function CreateRequestStep3Screen() {
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={{ flex: 1 }}>
       <SafeAreaView className="flex-1">
         <HeaderCreateRequestSteps currentStep={3} totalSteps={6} title="Crear Solicitud" />
-        <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View className="mb-4">
             <Text className="text-lg font-bold mb-2" style={{ color: colors.text }}>Selecciona la ubicación</Text>
             <Text className="text-sm mb-4" style={{ color: colors.textSecondary }}>Mueve el mapa para ajustar la ubicación exacta donde necesitas el servicio.</Text>
@@ -207,7 +207,7 @@ export default function CreateRequestStep3Screen() {
                     value={searchQuery}
                     onChangeText={handleSearchChange}
                     onFocus={() => { if (predictions.length > 0) setShowPredictions(true); }}
-                    onBlur={() => setTimeout(() => setShowPredictions(false), 200)}
+                    onBlur={() => setTimeout(() => setShowPredictions(false), 300)}
                     style={{ height: 56, lineHeight: Platform.OS === "ios" ? 0 : undefined, backgroundColor: colors.card, color: colors.text, borderColor: colors.border, borderWidth: 1 }}
                   />
                   <View className="absolute left-4 top-3.5 z-10">

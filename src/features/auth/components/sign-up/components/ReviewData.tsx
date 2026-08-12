@@ -202,10 +202,25 @@ const ReviewData = () => {
       }
     } catch (error: any) {
       console.error("Error creando cuenta:", error);
-      Alert.alert(
-        "Error",
-        error.errors?.[0]?.message || "Hubo un error al crear tu cuenta. Por favor, intenta nuevamente."
-      );
+      
+      let errorMessage = "Hubo un error al crear tu cuenta. Por favor, intenta nuevamente.";
+      
+      if (error?.errors?.[0]) {
+        const err = error.errors[0];
+        // Utilizamos la utilidad de Clerk y nuestro validador para traducir el error
+        if (err.code || err.message) {
+          // Import dynamic to avoid breaking if not imported at top
+          const { clerkErrorValidator } = require("@/features/auth/utils/clerkErrorValidator");
+          const validatedError = clerkErrorValidator(err);
+          errorMessage = validatedError.displayMessage;
+        } else {
+          errorMessage = err.message || errorMessage;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      Alert.alert("Error", errorMessage);
       setIsCreating(false);
     }
   };

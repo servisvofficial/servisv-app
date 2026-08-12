@@ -24,6 +24,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getUserInitials } from '@/common/utils/userHelpers';
 import { getCategoryIcon, getCategoryColor } from '@/common/utils/categoryIcons';
 import ServiceZoneMap from '@/features/auth/components/sign-up/components/ServiceZoneMap';
+import Slider from '@react-native-community/slider';
 import * as Location from 'expo-location';
 import { postImageToSupabase } from '@/common/services/post-image';
 import useSupabaseStorage from '@/common/hooks/useSupabaseStorage';
@@ -58,6 +59,7 @@ export default function EditarPerfilScreen() {
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [serviceRadius, setServiceRadius] = useState<number>(15);
   const [bankName, setBankName] = useState('');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [bankAccountType, setBankAccountType] = useState<'ahorro' | 'corriente'>('ahorro');
@@ -86,6 +88,7 @@ export default function EditarPerfilScreen() {
       setLastName(user.last_name || '');
       setCelPhone(user.cel_phone || '');
       setPoliceClearanceUrl((user as any).police_clearance_pic ?? null);
+      setServiceRadius((user as any).service_radius ?? 15);
       setLocation(user.location || '');
       setSearchQuery(user.location || '');
       
@@ -464,11 +467,17 @@ export default function EditarPerfilScreen() {
         updated_at: new Date().toISOString(),
       };
 
-      // Agregar información bancaria y solvencia solo si es proveedor
+      // Permitir guardar el DUI solo si no lo tenía previamente registrado
+      if (!user.dui && dui.trim()) {
+        updateData.dui = dui.trim();
+      }
+
+      // Agregar información bancaria, solvencia y rango de trabajo solo si es proveedor
       if (isProvider) {
         updateData.bank_account_number = bankAccountNumber.trim();
         updateData.bank_name = bankName.trim();
         updateData.bank_account_type = bankAccountType;
+        updateData.service_radius = serviceRadius;
         if (policeClearanceUrl) {
           updateData.police_clearance_pic = policeClearanceUrl;
         }
@@ -759,6 +768,8 @@ export default function EditarPerfilScreen() {
                           setPoliceClearanceUrl(result.url);
                           Alert.alert('Listo', 'Solvencia policial cargada. Guarda los cambios para actualizar tu perfil.');
                         }
+                      } catch (error) {
+                        Alert.alert('Error', 'No se pudo subir la solvencia policial. Intenta de nuevo.');
                       } finally {
                         setUploadingSolvencia(false);
                       }
@@ -883,6 +894,45 @@ export default function EditarPerfilScreen() {
                   </View>
                 </View>
               </View>
+
+              {/* Radio de servicio - Solo para proveedores */}
+              {isProvider && (
+                <View className="mt-4 pt-4 border-t" style={{ borderTopColor: colors.border }}>
+                  <View className="mb-6">
+                    <View className="flex-row items-center justify-between mb-3">
+                      <Text className="text-sm text-gray-700 font-medium">
+                        Radio de servicio
+                      </Text>
+                      <Text className="text-lg font-bold text-blue-600">
+                        {serviceRadius} km
+                      </Text>
+                    </View>
+
+                    <Slider
+                      style={{ width: '100%', height: 40 }}
+                      minimumValue={1}
+                      maximumValue={200}
+                      value={serviceRadius}
+                      onValueChange={setServiceRadius}
+                      minimumTrackTintColor="#3B82F6"
+                      maximumTrackTintColor="#E5E7EB"
+                      thumbTintColor="#3B82F6"
+                      step={1}
+                    />
+
+                    <View className="flex-row justify-between">
+                      <Text className="text-xs text-gray-500">1 km</Text>
+                      <Text className="text-xs text-gray-500">200 km</Text>
+                    </View>
+                  </View>
+
+                  <View className="p-4 bg-blue-50 rounded-xl mb-6">
+                    <Text className="text-sm text-blue-900">
+                      💡 Los clientes dentro de tu radio de servicio podrán ver tu perfil y solicitar tus servicios.
+                    </Text>
+                  </View>
+                </View>
+              )}
 
               {/* Información bancaria - Solo para proveedores */}
               {isProvider && (

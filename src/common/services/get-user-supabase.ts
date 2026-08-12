@@ -22,6 +22,7 @@ export interface User {
   total_quotes?: number;
   created_at?: string;
   updated_at?: string;
+  is_banned?: boolean;
 }
 
 export const getUserDataInSupabaseById = async (
@@ -40,6 +41,9 @@ export const getUserDataInSupabaseById = async (
   if (!data) {
     return null;
   }
+
+  // Nota: si está baneado, retornamos el usuario igualmente para que
+  // la app pueda cerrar sesión y mostrar un mensaje apropiado.
 
   // Si es proveedor, obtener sus categorías desde user_professional_services
   let serviceCategories: Array<{ category: string; subcategories?: string[] }> = [];

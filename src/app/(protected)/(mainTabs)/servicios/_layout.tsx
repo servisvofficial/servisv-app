@@ -12,6 +12,13 @@ const ServiciosLayout = () => {
         }}
       />
       <Stack.Screen
+        name="subcategorias"
+        options={{
+          presentation: "card",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="perfil-proveedor"
         options={{ 
           presentation: "card",

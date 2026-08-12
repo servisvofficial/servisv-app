@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "ServiSV",
     slug: "servisv-app",
-    version: "1.0.0",
+    version: "1.0.7",
     extra: {
       eas: {
         projectId: "0858e9b8-c95d-4547-9d0e-05f3557283f6",
@@ -17,7 +17,7 @@ export default {
     newArchEnabled: true,
     ios: {
       supportsTablet: true,
-      bundleIdentifier: "com.servisv.app",
+      bundleIdentifier: "com.serviciossv.servisv",
       config: {
         googleMapsApiKey,
       },
@@ -51,7 +51,7 @@ export default {
         foregroundImage: "./assets/images/icon.png",
         backgroundColor: "#FFFFFF",
       },
-      edgeToEdgeEnabled: true,
+      edgeToEdgeEnabled: false,
       predictiveBackGestureEnabled: false,
       package: "com.servisv.app",
     },
@@ -62,6 +62,7 @@ export default {
     plugins: [
       "@react-native-community/datetimepicker",
       "expo-font",
+      "expo-web-browser",
       [
         "expo-router",
         {
@@ -84,7 +85,7 @@ export default {
         "expo-notifications",
         {
           icon: "./assets/images/push-notification-icon.png",
-        }
+        },
       ],
     ],
     experiments: {

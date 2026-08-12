@@ -1,86 +1,80 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/common/lib/supabase/supabaseClient";
 
-interface CategoryCount {
-  categoryName: string;
-  count: number;
-}
-
 /**
- * Hook para obtener el conteo de proveedores para múltiples categorías
+ * Obtiene el conteo de proveedores validados por categoría.
+ * Usa 3 queries planas en paralelo en lugar de N queries en serie,
+ * evitando el problema de relaciones FK no registradas en el schema cache.
  */
 export const useProviderCounts = (categoryNames: string[]) => {
   return useQuery<Map<string, number>, Error>({
-    queryKey: ["providerCounts", categoryNames.sort().join(",")],
+    queryKey: ["providerCounts", categoryNames.slice().sort().join(",")],
     queryFn: async () => {
       const countsMap = new Map<string, number>();
-      
-      // Si no hay categorías, retornar mapa vacío
-      if (categoryNames.length === 0) {
-        return countsMap;
-      }
+      if (categoryNames.length === 0) return countsMap;
+      categoryNames.forEach((name) => countsMap.set(name, 0));
 
-      // Primero obtener todos los IDs de categorías
-      const { data: categories, error: categoriesError } = await supabase
+      // Query 1: IDs de las categorías que nos interesan
+      const { data: categoriesData, error: catError } = await supabase
         .from("categories")
         .select("id, name")
         .in("name", categoryNames);
 
-      if (categoriesError || !categories) {
-        console.error("Error al obtener categorías:", categoriesError);
-        // Retornar mapa vacío con 0 para todas las categorías
-        categoryNames.forEach((name) => countsMap.set(name, 0));
+      if (catError || !categoriesData || categoriesData.length === 0) {
         return countsMap;
       }
 
-      // Crear un mapa de nombre de categoría a ID
-      const categoryIdMap = new Map<string, number>();
-      categories.forEach((cat) => {
-        categoryIdMap.set(cat.name, cat.id);
-      });
+      const categoryIdToName = new Map<number, string>(
+        categoriesData.map((c: any) => [c.id, c.name])
+      );
+      const categoryIds = categoriesData.map((c: any) => c.id);
 
-      // Para cada categoría, obtener el conteo
-      for (const categoryName of categoryNames) {
-        const categoryId = categoryIdMap.get(categoryName);
-
-        if (!categoryId) {
-          countsMap.set(categoryName, 0);
-          continue;
-        }
-
-        // Obtener todos los user_ids que tienen esta categoría
-        const { data: services, error: servicesError } = await supabase
+      // Query 2 + Query 3 en paralelo
+      const [servicesResult, validatedResult] = await Promise.all([
+        // Todos los (user_id, category_id) para estas categorías
+        supabase
           .from("user_professional_services")
-          .select("user_id")
-          .eq("category_id", categoryId);
+          .select("user_id, category_id")
+          .in("category_id", categoryIds),
 
-        if (servicesError || !services || services.length === 0) {
-          countsMap.set(categoryName, 0);
-          continue;
-        }
-
-        // Obtener IDs únicos de proveedores
-        const uniqueProviderIds = [...new Set(services.map((s) => s.user_id))];
-
-        // Contar cuántos de estos son proveedores validados
-        const { count, error: countError } = await supabase
+        // Todos los user_ids de proveedores validados
+        supabase
           .from("users")
-          .select("id", { count: "exact", head: true })
-          .in("id", uniqueProviderIds)
+          .select("id")
           .eq("is_provider", true)
-          .eq("is_validated", true);
+          .eq("is_validated", true)
+          .eq("is_banned", false),
+      ]);
 
-        if (countError) {
-          console.error(`Error al contar proveedores para ${categoryName}:`, countError);
-          countsMap.set(categoryName, 0);
-        } else {
-          countsMap.set(categoryName, count || 0);
+      if (servicesResult.error || !servicesResult.data) return countsMap;
+      if (validatedResult.error || !validatedResult.data) return countsMap;
+
+      // Set de proveedores validados para lookup O(1)
+      const validatedIds = new Set<string>(
+        validatedResult.data.map((u: any) => u.id)
+      );
+
+      // Contar proveedores únicos validados por categoría en memoria
+      const providerSets = new Map<string, Set<string>>();
+
+      for (const row of servicesResult.data as any[]) {
+        if (!validatedIds.has(row.user_id)) continue;
+        const catName = categoryIdToName.get(row.category_id);
+        if (!catName) continue;
+
+        if (!providerSets.has(catName)) {
+          providerSets.set(catName, new Set());
         }
+        providerSets.get(catName)!.add(row.user_id);
       }
+
+      providerSets.forEach((set, name) => countsMap.set(name, set.size));
 
       return countsMap;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    cacheTime: 1000 * 60 * 10, // 10 minutos
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 };

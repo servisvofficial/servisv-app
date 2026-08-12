@@ -2,6 +2,46 @@ import { supabase } from "@/common/lib/supabase/supabaseClient";
 import type { Provider } from "../interfaces/provider.interface";
 
 /**
+ * Parsea coordenadas desde cualquier formato que Supabase pueda devolver:
+ * - Objeto JS:  { lat: number, lng: number }
+ * - String JSON simple:  '{"lat":13.8,"lng":-89.4}'
+ * - String JSON doble-encoded:  '"{\"lat\":13.8,\"lng\":-89.4}"'
+ */
+function parseCoordinates(raw: unknown): { lat: number; lng: number } | undefined {
+  if (!raw) return undefined;
+
+  // Caso 1: ya es un objeto con lat/lng
+  if (typeof raw === "object" && raw !== null) {
+    const obj = raw as any;
+    if (typeof obj.lat === "number" && typeof obj.lng === "number") {
+      return { lat: obj.lat, lng: obj.lng };
+    }
+  }
+
+  // Caso 2: string (simple o doble-encoded)
+  if (typeof raw === "string") {
+    let parsed: unknown = raw;
+    // Intentar parsear hasta 2 veces para manejar doble encoding
+    for (let i = 0; i < 2; i++) {
+      if (typeof parsed !== "string") break;
+      try {
+        parsed = JSON.parse(parsed);
+      } catch {
+        return undefined;
+      }
+    }
+    if (typeof parsed === "object" && parsed !== null) {
+      const obj = parsed as any;
+      if (typeof obj.lat === "number" && typeof obj.lng === "number") {
+        return { lat: obj.lat, lng: obj.lng };
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Convierte un usuario de Supabase a un Provider
  * Nota: No excluimos proveedores sin coordenadas aquí, ya que pueden aparecer
  * cuando no hay ubicación del usuario o cuando se filtra por ubicación general
@@ -61,26 +101,14 @@ const supabaseToProvider = async (user: any): Promise<Provider | null> => {
     console.error("Error al obtener categorías del proveedor:", error);
   }
 
-  // Parsear coordenadas si existen
-  let coordinates: { lat: number; lng: number } | undefined;
-  if (user.coordinates) {
-    if (typeof user.coordinates === "string") {
-      try {
-        coordinates = JSON.parse(user.coordinates);
-      } catch {
-        coordinates = undefined;
-      }
-    } else if (
-      typeof user.coordinates === "object" &&
-      user.coordinates.lat &&
-      user.coordinates.lng
-    ) {
-      coordinates = {
-        lat: user.coordinates.lat,
-        lng: user.coordinates.lng,
-      };
-    }
-  }
+  // Parsear coordenadas — la BD tiene dos formatos:
+  // 1. JSONB objeto:  { lat: 13.8, lng: -89.4 }
+  // 2. JSONB string:  "{\"lat\":13.8,\"lng\":-89.4}"  (doble encoding)
+  const coordinates = parseCoordinates(user.coordinates);
+
+  // Respetar el radio que el proveedor configuró. Si es NULL no tiene área configurada
+  // (lo manejamos en el filtro de useProviders)
+  const service_radius: number | null = user.service_radius ?? null;
 
   return {
     id: user.id,
@@ -93,7 +121,7 @@ const supabaseToProvider = async (user: any): Promise<Provider | null> => {
     service_categories: serviceCategories,
     location: user.location || undefined,
     coordinates,
-    service_radius: user.service_radius || 10, // Por defecto 10 km
+    service_radius,
     profile_pic: user.profile_pic || undefined,
     rating: user.rating || undefined,
     total_requests: user.total_requests || undefined,
@@ -110,7 +138,8 @@ export const getProviders = async (): Promise<Provider[]> => {
     const { data: users, error } = await supabase
       .from("users")
       .select("*")
-      .eq("is_provider", true);
+      .eq("is_provider", true)
+      .eq("is_banned", false);
       // No filtrar por is_validated aquí, se hará después si es necesario
 
     if (error) {

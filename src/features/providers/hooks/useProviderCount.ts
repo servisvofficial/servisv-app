@@ -14,7 +14,8 @@ export const useProviderCount = (categoryName?: string) => {
           .from("users")
           .select("id", { count: "exact", head: true })
           .eq("is_provider", true)
-          .eq("is_validated", true);
+          .eq("is_validated", true)
+          .eq("is_banned", false);
 
         if (error) {
           console.error("Error al contar proveedores:", error);
@@ -60,7 +61,8 @@ export const useProviderCount = (categoryName?: string) => {
         .select("id", { count: "exact", head: true })
         .in("id", uniqueProviderIds)
         .eq("is_provider", true)
-        .eq("is_validated", true);
+        .eq("is_validated", true)
+        .eq("is_banned", false);
 
       if (countError) {
         console.error("Error al contar proveedores por categoría:", countError);

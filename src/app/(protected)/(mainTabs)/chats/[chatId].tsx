@@ -188,8 +188,8 @@ export default function ChatDetailScreen() {
     const { hadContactInfo } = await sendMessage(chatId, text);
     if (hadContactInfo) {
       Alert.alert(
-        "Información de contacto ocultada",
-        "Se ha ocultado datos de contacto para mantener la conversación en la plataforma."
+        "⚠️ Información de contacto bloqueada",
+        "ServiSV bloqueó datos de contacto en tu mensaje. Compartir números, correos u otros datos para operar fuera de la plataforma infringe nuestras normas y puede resultar en la suspensión de tu cuenta."
       );
     }
   }, [inputText, chatId, sendMessage]);
@@ -348,6 +348,23 @@ export default function ChatDetailScreen() {
             ) : (
               messages.map(msg => {
                 const isSent = msg.sender_id === userId;
+
+                // Mensajes de sistema: banner centrado de advertencia
+                if (msg.type === "system") {
+                  return (
+                    <View key={msg.id} className="mb-4 px-2 items-center">
+                      <View
+                        className="rounded-xl px-4 py-2.5 border"
+                        style={{ backgroundColor: "#FFFBEB", borderColor: "#FCD34D", maxWidth: "90%" }}
+                      >
+                        <Text className="text-xs text-center" style={{ color: "#92400E" }}>
+                          {msg.content}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                }
+
                 return (
                   <View
                     key={msg.id}

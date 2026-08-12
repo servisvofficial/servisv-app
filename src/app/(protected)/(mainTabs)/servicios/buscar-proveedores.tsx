@@ -6,23 +6,54 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SearchBar } from '@/common/components';
 import { useTheme } from '@/common/providers/ThemeProvider';
 import { useProviders } from '@/features/providers';
-import { useState } from 'react';
+import { useUserData } from '@/common/hooks/useUserData';
+import { useState, useMemo } from 'react';
 
 export default function BuscarProveedoresScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const params = useLocalSearchParams<{ category?: string }>();
+  const params = useLocalSearchParams<{
+    category?: string;
+    subcategory?: string;
+    categoryLabel?: string;
+  }>();
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [ignoreDistance, setIgnoreDistance] = useState(false);
+
+  // Obtener coordenadas del perfil del usuario actual
+  const { user } = useUserData();
+  const profileLocation = useMemo(() => {
+    if (!user) return null;
+    // Supabase puede devolver JSONB como objeto o como string según el cliente
+    const raw = user.coordinates as any;
+    if (!raw) return null;
+    try {
+      const coords = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      if (typeof coords?.lat === 'number' && typeof coords?.lng === 'number') {
+        return { latitude: coords.lat, longitude: coords.lng };
+      }
+    } catch {
+      // coordenadas con formato inválido
+    }
+    return null;
+  }, [user]);
+
   // Calcular padding bottom para que el contenido llegue hasta el borde de las tabs
   const scrollViewPaddingBottom = 70 + Math.max(insets.bottom, 8);
 
-  const { providers, isLoading, error, refetch, locationError } = useProviders({
+  const { providers, isLoading, error, refetch, locationError, userLocation } = useProviders({
     category: params.category,
+    subcategory: params.subcategory,
     searchQuery: searchQuery.trim() || undefined,
     enabled: true,
+    ignoreDistance,
+    // Usar la ubicación del perfil del usuario como referencia de distancia
+    customLocation: profileLocation,
   });
+
+  // Título: mostrar la subcategoría si viene, si no la categoría
+  const screenTitle = params.categoryLabel ?? params.subcategory ?? params.category ?? 'Proveedores';
 
   return (
     <LinearGradient
@@ -44,7 +75,7 @@ export default function BuscarProveedoresScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <MaterialIcons name="arrow-back" size={24} color={colors.textSecondary} />
         </TouchableOpacity>
-        <Text className="text-2xl font-bold" style={{ color: colors.text }}>Buscar Proveedores</Text>
+        <Text className="text-2xl font-bold" style={{ color: colors.text }}>{screenTitle}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -82,6 +113,20 @@ export default function BuscarProveedoresScreen() {
             </View>
           )}
 
+          {/* Aviso cuando se ignora el filtro de distancia */}
+          {ignoreDistance && (
+            <View className="px-5 mb-4">
+              <View className="p-3 rounded-xl flex-row items-center justify-between" style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }}>
+                <Text className="text-sm flex-1 mr-2" style={{ color: colors.textSecondary }}>
+                  Mostrando todos los proveedores sin filtro de distancia
+                </Text>
+                <TouchableOpacity onPress={() => setIgnoreDistance(false)}>
+                  <Text className="text-sm font-semibold" style={{ color: colors.primary }}>Filtrar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           {/* Lista de proveedores */}
           <View className="px-5">
             {isLoading ? (
@@ -106,7 +151,7 @@ export default function BuscarProveedoresScreen() {
                 </TouchableOpacity>
               </View>
             ) : providers.length === 0 ? (
-              <View className="py-20 items-center">
+              <View className="py-20 items-center px-4">
                 <MaterialIcons name="search-off" size={48} color={colors.textSecondary} />
                 <Text className="mt-4 text-center font-semibold" style={{ color: colors.text }}>
                   No se encontraron proveedores
@@ -116,6 +161,15 @@ export default function BuscarProveedoresScreen() {
                     ? 'Intenta con otros términos de búsqueda'
                     : 'No hay proveedores disponibles en tu área'}
                 </Text>
+                {!searchQuery && userLocation && !ignoreDistance && (
+                  <TouchableOpacity
+                    className="mt-6 px-6 py-3 rounded-xl"
+                    style={{ backgroundColor: colors.primary }}
+                    onPress={() => setIgnoreDistance(true)}
+                  >
+                    <Text className="text-white font-semibold text-sm">Ver todos los proveedores</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ) : (
               providers.map((proveedor) => {

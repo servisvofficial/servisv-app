@@ -218,7 +218,7 @@ const ServiceZone = () => {
           title={isProvider ? "Regístrate como Proveedor" : "Crear una Cuenta"}
         />
 
-        <ScrollView className="flex-1 px-5 pt-6">
+        <ScrollView className="flex-1 px-5 pt-6" keyboardShouldPersistTaps="handled">
           {/* Para Clientes: Dirección y Documentos */}
           {isClient && (
             <>
@@ -291,7 +291,7 @@ const ServiceZone = () => {
                       }}
                       onBlur={() => {
                         // Delay para permitir que se ejecute el onPress de las sugerencias
-                        setTimeout(() => setShowPredictions(false), 200);
+                        setTimeout(() => setShowPredictions(false), 300);
                       }}
                       style={{
                         height: 56,
@@ -400,7 +400,7 @@ const ServiceZone = () => {
                 }}
                 onBlur={() => {
                   // Delay para permitir que se ejecute el onPress de las sugerencias
-                  setTimeout(() => setShowPredictions(false), 200);
+                  setTimeout(() => setShowPredictions(false), 300);
                 }}
               />
               <View className="absolute left-4 top-3.5 z-10">
@@ -482,7 +482,7 @@ const ServiceZone = () => {
           <Slider
             style={{ width: '100%', height: 40 }}
             minimumValue={1}
-            maximumValue={50}
+            maximumValue={100}
             value={radioServicio}
             onValueChange={setRadioServicio}
             minimumTrackTintColor="#3B82F6"
@@ -493,7 +493,7 @@ const ServiceZone = () => {
 
           <View className="flex-row justify-between mt-1">
             <Text className="text-xs text-gray-500">1 km</Text>
-            <Text className="text-xs text-gray-500">50 km</Text>
+            <Text className="text-xs text-gray-500">100 km</Text>
           </View>
         </View>
 

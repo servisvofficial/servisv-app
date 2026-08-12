@@ -1,8 +1,41 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { usePushNotifications } from "@/common/hooks/usePushNotifications";
+import { useEffect, useRef } from "react";
+import { Alert } from "react-native";
+import { useAuth } from "@clerk/clerk-expo";
+import { useUserData } from "@/common/hooks/useUserData";
 
 const ProtectedLayout = () => {
   usePushNotifications();
+  const router = useRouter();
+  const { signOut } = useAuth();
+  const { user, isLoading } = useUserData();
+  const didHandleBan = useRef(false);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) return;
+    if (!(user as any).is_banned) return;
+    if (didHandleBan.current) return;
+    didHandleBan.current = true;
+
+    Alert.alert(
+      "Acceso denegado",
+      "Tu cuenta ha sido suspendida. Por favor, contacta al soporte si crees que esto es un error.",
+      [
+        {
+          text: "Entendido",
+          onPress: async () => {
+            try {
+              await signOut();
+            } finally {
+              router.replace("/(auth)/sign-in");
+            }
+          },
+        },
+      ]
+    );
+  }, [isLoading, user, signOut, router]);
 
   return (
     <Stack

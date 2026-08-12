@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Share, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -196,6 +196,37 @@ export default function PerfilScreen() {
                     style={{ paddingVertical: 14, alignItems: 'center', borderRadius: 12 }}
                   >
                     <Text className="text-white font-bold text-base">Contratar Servicio</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Botón de Compartir Link de Contratación (Solo Provider + Propio Perfil) */}
+            {isOwnProfile && user?.is_provider && (
+              <View className="px-5 mb-6">
+                <TouchableOpacity
+                  className="rounded-xl overflow-hidden"
+                  activeOpacity={0.8}
+                  onPress={async () => {
+                    try {
+                      // El enlace web del portal
+                      const url = `https://servisv.com/contratar/${user.id}`;
+                      await Share.share({
+                        message: `¡Hola! Puedes contratar mis servicios de forma rápida y segura a través de este enlace:\n\n${url}`,
+                      });
+                    } catch (error: any) {
+                      Alert.alert("Error", "No se pudo compartir el enlace.");
+                    }
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#10B981', '#059669']} // Emerald green gradient
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{ paddingVertical: 14, alignItems: 'center', borderRadius: 12, flexDirection: 'row', justifyContent: 'center' }}
+                  >
+                    <MaterialIcons name="share" size={20} color="white" style={{ marginRight: 8 }} />
+                    <Text className="text-white font-bold text-base">Compartir Link de Contratación</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>

@@ -120,6 +120,7 @@ export default function ConfiguracionScreen() {
           icono: "notifications",
           titulo: "Notificaciones",
           tieneFlecha: true,
+          onPress: () => router.push("/(protected)/notificaciones" as any),
         },
         {
           id: "3",
@@ -167,7 +168,7 @@ export default function ConfiguracionScreen() {
           icono: "help",
           titulo: "Ayuda y Soporte",
           tieneFlecha: true,
-          onPress: () => Linking.openURL("https://servisv.com/ayuda"),
+          onPress: () => Linking.openURL("https://wa.me/50374701132"),
         },
       ],
     },

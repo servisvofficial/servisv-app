@@ -108,14 +108,7 @@ export function HomeProveedor() {
                     </Text>
                   </View>
                 </View>
-                <TouchableOpacity
-                  onPress={() => router.push('/(protected)/solicitudes-disponibles' as any)}
-                  activeOpacity={0.7}
-                >
-                  <Text className="text-purple-600 font-semibold text-sm">
-                    Ver Solicitudes →
-                  </Text>
-                </TouchableOpacity>
+                <MaterialIcons name="chevron-right" size={24} color="#9333EA" />
               </View>
             </TouchableOpacity>
           </View>
@@ -146,14 +139,7 @@ export function HomeProveedor() {
                     </Text>
                   </View>
                 </View>
-                <TouchableOpacity
-                  onPress={() => router.push('/(protected)/presupuestos' as any)}
-                  activeOpacity={0.7}
-                >
-                  <Text className="text-blue-600 font-semibold text-sm">
-                    Ver Presupuestos →
-                  </Text>
-                </TouchableOpacity>
+                <MaterialIcons name="chevron-right" size={24} color="#3B82F6" />
               </View>
             </TouchableOpacity>
           </View>

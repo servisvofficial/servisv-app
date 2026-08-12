@@ -9,9 +9,11 @@ import type { Provider, ProviderWithDistance } from "../interfaces/provider.inte
 
 interface UseProvidersOptions {
   category?: string;
+  subcategory?: string; // when set, filters strictly by this subcategory within the parent category
   searchQuery?: string;
   enabled?: boolean;
   customLocation?: { latitude: number; longitude: number } | null;
+  ignoreDistance?: boolean; // cuando true, no filtra por radio de servicio
 }
 
 interface UseProvidersResult {
@@ -27,7 +29,7 @@ export const useProviders = (
   options: UseProvidersOptions = {}
 ): UseProvidersResult => {
   const { userId } = useAuth();
-  const { category, searchQuery, enabled = true, customLocation } = options;
+  const { category, subcategory, searchQuery, enabled = true, customLocation, ignoreDistance = false } = options;
 
   const [userLocation, setUserLocation] =
     useState<{ latitude: number; longitude: number } | null>(null);
@@ -39,10 +41,12 @@ export const useProviders = (
   // Si no, obtener la ubicación del dispositivo
   useEffect(() => {
     if (customLocation) {
-      // Solo actualizar si la ubicación realmente cambió
       setUserLocation(prev => {
-        if (prev?.latitude === customLocation.latitude && prev?.longitude === customLocation.longitude) {
-          return prev; // No cambiar si es la misma ubicación
+        if (
+          prev?.latitude === customLocation.latitude &&
+          prev?.longitude === customLocation.longitude
+        ) {
+          return prev;
         }
         return customLocation;
       });
@@ -50,21 +54,36 @@ export const useProviders = (
       return;
     }
 
-    // Solo solicitar ubicación si no hay una personalizada y está habilitado
-    if (!enabled) {
-      return;
-    }
+    if (!enabled) return;
 
     const requestLocation = async () => {
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
+        // En iOS, verificar permisos existentes primero para no pedir de nuevo si ya están granted
+        const { status: existingStatus } = await Location.getForegroundPermissionsAsync();
+
+        let finalStatus = existingStatus;
+        if (existingStatus !== "granted") {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          finalStatus = status;
+        }
+
+        if (finalStatus !== "granted") {
           setLocationError("Permiso de ubicación denegado");
           return;
         }
 
         setLocationPermissionGranted(true);
 
+        // Intentar primero con lastKnownPosition (instantáneo) para mostrar resultados rápido
+        const lastKnown = await Location.getLastKnownPositionAsync();
+        if (lastKnown) {
+          setUserLocation({
+            latitude: lastKnown.coords.latitude,
+            longitude: lastKnown.coords.longitude,
+          });
+        }
+
+        // Luego obtener la posición precisa y actualizar
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
@@ -76,11 +95,16 @@ export const useProviders = (
         setLocationError(null);
       } catch (error) {
         console.error("Error al obtener ubicación:", error);
-        setLocationError("Error al obtener ubicación");
+        // Si ya teníamos una ubicación aproximada, no sobreescribir con error
+        setUserLocation(prev => {
+          if (prev) return prev;
+          return null;
+        });
+        setLocationError("No se pudo obtener tu ubicación exacta");
       }
     };
 
-    requestLocation();
+    void requestLocation();
   }, [enabled, customLocation?.latitude, customLocation?.longitude]);
 
   // Obtener proveedores desde Supabase - cachear por 10 minutos
@@ -114,50 +138,55 @@ export const useProviders = (
       return true;
     });
 
-    // 2. Filtrar por categoría si se especifica
-    if (category) {
-      // Normalizar la categoría: convertir guiones a espacios y normalizar texto
-      const categoryNormalized = normalizeText(category.trim());
-      
-      const beforeCategoryFilter = filtered.length;
-      
-      filtered = filtered.filter((p) => {
-        if (!p.service_categories || p.service_categories.length === 0) {
-          return false;
-        }
+    // 2. Filtrar por categoría / subcategoría
+    if (subcategory) {
+      // Modo estricto: el proveedor debe tener la categoría padre Y la subcategoría exacta.
+      // Esto evita falsos positivos por inclusión parcial de texto
+      // (p.ej. "Limpieza" coincidiendo con "Mantenimiento y limpieza").
+      const parentNormalized = category ? normalizeText(category.trim()) : null;
+      const subNormalized = normalizeText(subcategory.trim());
 
-        // Buscar en todas las categorías del proveedor
-        const matches = p.service_categories.some((cat) => {
+      filtered = filtered.filter((p) => {
+        if (!p.service_categories || p.service_categories.length === 0) return false;
+
+        return p.service_categories.some((cat) => {
+          const catNorm = normalizeText(cat.category);
+
+          // Si se conoce la categoría padre, el proveedor debe pertenecer a ella
+          if (parentNormalized && catNorm !== parentNormalized) return false;
+
+          // El proveedor debe tener la subcategoría exacta (normalizada)
+          return (
+            cat.subcategories?.some((s) => normalizeText(s) === subNormalized) ?? false
+          );
+        });
+      });
+    } else if (category) {
+      // Modo estándar: filtrar por categoría usando coincidencia flexible
+      const categoryNormalized = normalizeText(category.trim());
+
+      filtered = filtered.filter((p) => {
+        if (!p.service_categories || p.service_categories.length === 0) return false;
+
+        return p.service_categories.some((cat) => {
           const catNameNormalized = normalizeText(cat.category);
 
-          // Verificar coincidencia exacta primero (más precisa)
-          if (catNameNormalized === categoryNormalized) {
+          if (catNameNormalized === categoryNormalized) return true;
+
+          if (
+            catNameNormalized.includes(categoryNormalized) ||
+            categoryNormalized.includes(catNameNormalized)
+          ) {
             return true;
           }
 
-          // Verificar coincidencia parcial (más flexible)
-          if (catNameNormalized.includes(categoryNormalized) || 
-              categoryNormalized.includes(catNameNormalized)) {
-            return true;
-          }
-
-          // Si no coincide la categoría, buscar en subcategorías
-          if (cat.subcategories && cat.subcategories.length > 0) {
-            return cat.subcategories.some((sub) => {
-              const subNormalized = normalizeText(sub);
-              // Coincidencia exacta o parcial en subcategorías
-              return (
-                subNormalized === categoryNormalized ||
-                subNormalized.includes(categoryNormalized) ||
-                categoryNormalized.includes(subNormalized)
-              );
-            });
-          }
-
-          return false;
+          // Buscar en subcategorías solo con coincidencia exacta para evitar
+          // falsos positivos por palabras comunes
+          return (
+            cat.subcategories?.some((sub) => normalizeText(sub) === categoryNormalized) ??
+            false
+          );
         });
-        
-        return matches;
       });
     }
 
@@ -171,61 +200,53 @@ export const useProviders = (
       });
     }
 
-    // 4. Si hay ubicación del usuario, calcular distancias y mostrar los que están dentro del radio
-    if (userLocation) {
-      // Separar proveedores con y sin coordenadas
-      const providersWithCoords: Provider[] = [];
-      const providersWithoutCoords: Provider[] = [];
+    // 4. Si hay ubicación del usuario y no se ignora la distancia, filtrar por radio de servicio
+    if (userLocation && !ignoreDistance) {
+      // Cap razonable: El Salvador mide ~250km de extremo a extremo
+      const MAX_RADIUS_KM = 250;
+      // Default para proveedores sin radio configurado (NULL en BD)
+      const DEFAULT_RADIUS_KM = 15;
 
-      filtered.forEach((provider) => {
-        if (provider.coordinates && provider.service_radius) {
-          providersWithCoords.push(provider);
-        } else {
-          providersWithoutCoords.push(provider);
+      const nearby: ProviderWithDistance[] = [];
+      const withoutCoords: ProviderWithDistance[] = [];
+
+      for (const provider of filtered) {
+        const coords = provider.coordinates;
+
+        // Si no tiene coordenadas válidas, incluirlo al final sin distancia
+        if (!coords || typeof coords.lat !== "number" || typeof coords.lng !== "number") {
+          withoutCoords.push({ ...provider, distance: undefined });
+          continue;
         }
-      });
 
-      // Calcular distancias para proveedores con coordenadas
-      const nearbyProviders: ProviderWithDistance[] = providersWithCoords
-        .map((provider) => {
-          const distance = getDistance(
-            userLocation.latitude,
-            userLocation.longitude,
-            provider.coordinates!.lat,
-            provider.coordinates!.lng
-          );
+        // Usar el radio que el proveedor configuró, con cap sensato
+        const rawRadius = provider.service_radius;
+        const radius: number =
+          rawRadius != null && rawRadius > 0
+            ? Math.min(rawRadius, MAX_RADIUS_KM)
+            : DEFAULT_RADIUS_KM;
 
-          return {
-            ...provider,
-            distance,
-          };
-        })
-        .filter((provider) => {
-          // SOLO incluir proveedores que estén dentro de su radio de servicio
-          const distance = provider.distance ?? Infinity;
-          const radius = provider.service_radius ?? 0;
-          return distance <= radius;
-        })
-        .sort((a, b) => {
-          // Ordenar por distancia (más cercanos primero)
-          const distA = a.distance ?? Infinity;
-          const distB = b.distance ?? Infinity;
-          return distA - distB;
-        });
+        const distance = getDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          coords.lat,
+          coords.lng
+        );
 
-      // Agregar proveedores sin coordenadas al final (sin distancia)
-      const providersWithoutDistance = providersWithoutCoords.map((p) => ({
-        ...p,
-        distance: undefined,
-      }));
+        if (distance > radius) continue;
 
-      // Retornar primero los cercanos, luego los sin coordenadas
-      return [...nearbyProviders, ...providersWithoutDistance];
+        nearby.push({ ...provider, distance });
+      }
+
+      // Ordenar por distancia (más cercanos primero) y agregar los sin coordenadas al final
+      nearby.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+
+      return [...nearby, ...withoutCoords];
     }
 
-    // 5. Si no hay ubicación, retornar todos los proveedores filtrados (sin distancia)
+    // 5. Sin ubicación del usuario: mostrar todos sin filtrar por distancia
     return filtered.map((p) => ({ ...p, distance: undefined }));
-  }, [allProviders, userId, category, searchQuery, userLocation]);
+  }, [allProviders, userId, category, subcategory, searchQuery, userLocation, ignoreDistance]);
 
   return {
     providers,

@@ -36,6 +36,7 @@ import {
 import { ReportModal } from "@/common/components/ReportModal";
 import { getCategoryIcon } from "@/common/utils/categoryIcons";
 import { supabase } from "@/common/lib/supabase/supabaseClient";
+import { RehireButton } from "@/common/components/RehireButton";
 
 export default function DetalleSolicitudScreen() {
   const router = useRouter();
@@ -331,7 +332,13 @@ export default function DetalleSolicitudScreen() {
           <Text className="text-lg font-bold" style={{ color: colors.text }}>
             Mi Solicitud
           </Text>
-          <View className="flex-row gap-2">
+          <View className="flex-row gap-2 items-center">
+            {solicitud.status === "completed" && isOwner && acceptedQuote && (
+              <RehireButton
+                requestId={requestId}
+                providerId={acceptedQuote.providerId}
+              />
+            )}
             <RequestStatusBadge status={solicitud.status} />
           </View>
         </View>

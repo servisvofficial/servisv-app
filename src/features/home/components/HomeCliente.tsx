@@ -65,6 +65,42 @@ export function HomeCliente() {
               </Text>
             </View>
 
+            {/* Aviso de DUI faltante para clientes invitados */}
+            {user && !user.dui && (
+              <View className="px-5 mb-4">
+                <TouchableOpacity
+                  className="bg-blue-50 rounded-2xl p-4 border border-blue-200"
+                  onPress={() => router.push("/(protected)/(mainTabs)/perfil/editar-perfil" as any)}
+                  activeOpacity={0.7}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center flex-1">
+                      <View className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center mr-3">
+                        <MaterialIcons
+                          name="info"
+                          size={24}
+                          color="#2563EB"
+                        />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-base font-semibold" style={{ color: "#1E3A8A" }}>
+                          Completa tu registro
+                        </Text>
+                        <Text className="text-sm mt-1" style={{ color: "#1E3A8A" }}>
+                          Para disfrutar de todas las funcionalidades, por favor agrega tu número de DUI.
+                        </Text>
+                      </View>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color="#2563EB"
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Mis Solicitudes Card */}
             <View className="px-5 mb-4">
               <TouchableOpacity

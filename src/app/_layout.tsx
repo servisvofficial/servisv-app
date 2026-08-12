@@ -2,10 +2,10 @@ import { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { View, ActivityIndicator, Text, TextInput } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
-import { tokenCache } from '@clerk/clerk-expo/token-cache';
+import { tokenCache } from '@/common/utils/tokenCache';
 import 'react-native-reanimated';
 import '../../global.css';
 
@@ -15,6 +15,22 @@ import { ClerkSupabaseProvider } from '@/common/providers/ClerkSupabaseProvider'
 import { ThemeProvider as AppThemeProvider } from '@/common/providers/ThemeProvider';
 import { ChatProvider } from '@/features/chat';
 import { envs } from '@/common/config/envs';
+
+// Desactivar escalado de fuentes excesivo a nivel de Design System para dispositivos (ej. Honor)
+interface TextWithDefaultProps {
+  defaultProps?: { maxFontSizeMultiplier?: number; allowFontScaling?: boolean };
+}
+
+if ((Text as unknown as TextWithDefaultProps).defaultProps == null) {
+  (Text as unknown as TextWithDefaultProps).defaultProps = {};
+}
+(Text as unknown as TextWithDefaultProps).defaultProps!.maxFontSizeMultiplier = 1.1;
+
+if ((TextInput as unknown as TextWithDefaultProps).defaultProps == null) {
+  (TextInput as unknown as TextWithDefaultProps).defaultProps = {};
+}
+(TextInput as unknown as TextWithDefaultProps).defaultProps!.maxFontSizeMultiplier = 1.1;
+
 
 /** Redirige desde la ruta inicial según auth. Debe estar dentro de ClerkProvider. */
 function InitialRedirect() {

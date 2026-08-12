@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useMemo, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 import { supabase } from "@/common/lib/supabase/supabaseClient";
 import type { Chat, ChatWithDetails, Message } from "@/common/types/chat";
@@ -11,7 +11,13 @@ import {
   sendMessage as sendMessageService,
   markMessagesAsRead as markMessagesAsReadService,
 } from "../services";
-import { sanitizeChatContactInfo } from "../utils/chatContactSanitizer";
+import {
+  sanitizeChatContactInfo,
+  messageHasNumericContent,
+  numericHistoryKey,
+  CHAT_NUMERIC_HISTORY_MAX,
+  CHAT_NUMERIC_HISTORY_TTL_MS,
+} from "../utils/chatContactSanitizer";
 import { ChatContext } from "../context/chatContextRef";
 
 export interface UseChatReturn {
@@ -67,6 +73,38 @@ export function useChatState(): UseChatReturn {
   const [loading, setLoading] = useState(false);
   const [loadingChats, setLoadingChats] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const senderNumericHistoryRef = useRef<
+    Map<string, { texts: string[]; updatedAt: number }>
+  >(new Map());
+
+  const getRecentSenderTexts = useCallback(
+    (chatId: string, senderId: string): string[] => {
+      const key = numericHistoryKey(chatId, senderId);
+      const entry = senderNumericHistoryRef.current.get(key);
+      if (!entry) return [];
+      if (Date.now() - entry.updatedAt > CHAT_NUMERIC_HISTORY_TTL_MS) {
+        senderNumericHistoryRef.current.delete(key);
+        return [];
+      }
+      return [...entry.texts];
+    },
+    []
+  );
+
+  const recordSenderNumericMessage = useCallback(
+    (chatId: string, senderId: string, rawContent: string) => {
+      if (!messageHasNumericContent(rawContent)) return;
+      const key = numericHistoryKey(chatId, senderId);
+      const now = Date.now();
+      const entry = senderNumericHistoryRef.current.get(key);
+      const texts = entry?.texts ? [...entry.texts, rawContent] : [rawContent];
+      if (texts.length > CHAT_NUMERIC_HISTORY_MAX) {
+        texts.splice(0, texts.length - CHAT_NUMERIC_HISTORY_MAX);
+      }
+      senderNumericHistoryRef.current.set(key, { texts, updatedAt: now });
+    },
+    []
+  );
 
   const getOrCreateChat = useCallback(
     async (
@@ -154,9 +192,14 @@ export function useChatState(): UseChatReturn {
       let finalContent = content;
       let hadContactInfo = false;
       if (type === "text" && content && content.trim()) {
-        const { sanitized, hadContactInfo: had } = sanitizeChatContactInfo(content);
+        const recentSenderTexts = getRecentSenderTexts(chatId, userId);
+        const { sanitized, hadContactInfo: had } = sanitizeChatContactInfo(
+          content,
+          { recentSenderTexts }
+        );
         finalContent = sanitized;
         hadContactInfo = had;
+        recordSenderNumericMessage(chatId, userId, content);
       }
       const msg = await sendMessageService(
         chatId,
@@ -172,9 +215,28 @@ export function useChatState(): UseChatReturn {
           return { ...prev, [chatId]: [...existing, msg] };
         });
       }
+
+      // Si se detectó información de contacto, enviar advertencia de sistema
+      if (hadContactInfo) {
+        const sysMsg = await sendMessageService(
+          chatId,
+          userId,
+          "⚠️ ServiSV bloqueó información de contacto en el mensaje anterior. Compartir números de teléfono, correos u otros datos para operar fuera de la plataforma infringe nuestras normas de uso y puede resultar en la suspensión de tu cuenta.",
+          "system",
+          null
+        );
+        if (sysMsg) {
+          setMessagesByChatId((prev) => {
+            const existing = prev[chatId] ?? [];
+            if (existing.some((m) => m.id === sysMsg.id)) return prev;
+            return { ...prev, [chatId]: [...existing, sysMsg] };
+          });
+        }
+      }
+
       return { message: msg, hadContactInfo };
     },
-    [userId]
+    [userId, getRecentSenderTexts, recordSenderNumericMessage]
   );
 
   const markMessagesAsRead = useCallback(
