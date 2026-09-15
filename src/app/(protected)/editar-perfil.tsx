@@ -50,6 +50,7 @@ export default function EditarPerfilScreen() {
   const [name, setName] = useState('');
   const [lastName, setLastName] = useState('');
   const [celPhone, setCelPhone] = useState('');
+  const [dui, setDui] = useState('');
   const [location, setLocation] = useState('');
   const [latitude, setLatitude] = useState<number | undefined>(undefined);
   const [longitude, setLongitude] = useState<number | undefined>(undefined);
@@ -87,6 +88,7 @@ export default function EditarPerfilScreen() {
       setName(user.name || '');
       setLastName(user.last_name || '');
       setCelPhone(user.cel_phone || '');
+      setDui(user.dui || '');
       setPoliceClearanceUrl((user as any).police_clearance_pic ?? null);
       setServiceRadius((user as any).service_radius ?? 15);
       setLocation(user.location || '');
@@ -586,7 +588,11 @@ export default function EditarPerfilScreen() {
       Alert.alert('Éxito', 'Tu perfil ha sido actualizado correctamente', [
         {
           text: 'OK',
-          onPress: () => router.back(),
+          onPress: () => {
+            setTimeout(() => {
+              router.back();
+            }, 100);
+          },
         },
       ]);
     } catch (error: any) {
@@ -728,6 +734,33 @@ export default function EditarPerfilScreen() {
                     color: colors.text,
                   }}
                 />
+              </View>
+
+              {/* DUI */}
+              <View>
+                <Text className="text-sm font-semibold mb-2" style={{ color: colors.text }}>
+                  DUI
+                </Text>
+                <TextInput
+                  value={dui}
+                  onChangeText={setDui}
+                  editable={!user?.dui}
+                  placeholder="00000000-0"
+                  placeholderTextColor={colors.textSecondary}
+                  className="px-4 py-3 border rounded-xl text-base"
+                  style={{
+                    height: 56,
+                    lineHeight: Platform.OS === "ios" ? 0 : undefined,
+                    backgroundColor: !user?.dui ? colors.card : colors.border,
+                    borderColor: colors.border,
+                    color: !user?.dui ? colors.text : colors.textSecondary,
+                  }}
+                />
+                {!!user?.dui && (
+                  <Text className="text-xs mt-1" style={{ color: colors.textSecondary }}>
+                    El DUI no se puede modificar una vez guardado
+                  </Text>
+                )}
               </View>
 
               {/* Email (solo lectura) */}

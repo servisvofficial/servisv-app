@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, ActivityIndicator, Alert, TouchableOpacity, Text } from 'react-native';
-import { supabase } from '../../services/supabase';
+import { supabase } from '@/common/lib/supabase/supabaseClient';
 import { useRouter } from 'expo-router';
-import { RefreshCw } from 'lucide-react-native';
-import { useAuth } from '../../features/auth/contexts/AuthContext';
-import { colors } from '../theme/colors';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useAuth } from '@clerk/clerk-expo';
+import { COLORS } from '@/common/utils/colors';
 
 interface RehireButtonProps {
   requestId: string;
@@ -14,10 +14,10 @@ interface RehireButtonProps {
 export function RehireButton({ requestId, providerId }: RehireButtonProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { session } = useAuth();
+  const { userId } = useAuth();
   
   const handleRehire = async () => {
-    if (!session?.user) {
+    if (!userId) {
       Alert.alert('Inicia sesión', 'Debes iniciar sesión para volver a contratar.');
       return;
     }
@@ -35,7 +35,7 @@ export function RehireButton({ requestId, providerId }: RehireButtonProps) {
               const { data, error } = await supabase.rpc('duplicate_request_for_rehire', {
                 p_original_request_id: requestId,
                 p_provider_id: providerId,
-                p_client_id: session.user.id
+                p_client_id: userId
               });
 
               if (error) throw error;
@@ -67,11 +67,11 @@ export function RehireButton({ requestId, providerId }: RehireButtonProps) {
       className="flex-row items-center justify-center bg-gray-100 rounded-full px-4 py-2 border border-gray-200"
     >
       {loading ? (
-        <ActivityIndicator size="small" color={colors.primary.main} />
+        <ActivityIndicator size="small" color={COLORS.primary[500]} />
       ) : (
         <>
-          <RefreshCw size={16} color={colors.primary.main} style={{ marginRight: 6 }} />
-          <Text className="text-primary-main font-semibold text-sm">Volver a Contratar</Text>
+          <MaterialIcons name="refresh" size={16} color={COLORS.primary[500]} style={{ marginRight: 6 }} />
+          <Text className="text-blue-500 font-semibold text-sm">Volver a Contratar</Text>
         </>
       )}
     </TouchableOpacity>

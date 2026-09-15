@@ -52,7 +52,14 @@ export const getRequestDetail = async (
       serviceCategory: data.service_category,
       subcategory: data.subcategory || undefined,
       location: typeof data.location === 'string' 
-        ? { address: data.location } 
+        ? (() => {
+            try {
+              const parsed = JSON.parse(data.location);
+              return parsed.address ? parsed : { address: data.location };
+            } catch {
+              return { address: data.location };
+            }
+          })()
         : data.location,
       coordinates: data.coordinates || undefined,
       photos: data.photos || [],

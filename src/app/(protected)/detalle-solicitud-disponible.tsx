@@ -10,7 +10,7 @@ import { useTheme } from '@/common/providers/ThemeProvider';
 import { createQuote } from '@/common/services/create-quote';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRequestDetail } from '@/features/solicitudes';
-import { RequestStatusBadge } from '@/features/solicitudes/components/RequestStatusBadge';
+import { RequestStatusBadge, RequestAddress } from '@/features/solicitudes/components';
 import { getCategoryIcon } from '@/common/utils/categoryIcons';
 
 /**
@@ -204,11 +204,13 @@ export default function DetalleSolicitudDisponibleModal() {
 
                 <View className="flex-row items-center mb-3">
                   <MaterialIcons name="location-on" size={18} color={colors.textSecondary} />
-                  <Text className="text-sm ml-2 flex-1" style={{ color: colors.text }}>
-                    {typeof solicitud.location === 'string' 
+                  <RequestAddress 
+                    className="text-sm ml-2 flex-1" 
+                    style={{ color: colors.text }}
+                    locationString={typeof solicitud.location === 'string' 
                       ? solicitud.location 
                       : solicitud.location.address}
-                  </Text>
+                  />
                 </View>
 
                 <View className="flex-row items-center mb-3">
@@ -285,7 +287,7 @@ export default function DetalleSolicitudDisponibleModal() {
                             text: 'Ir a Editar Perfil',
                             onPress: () => {
                               router.back();
-                              router.push('/(protected)/(mainTabs)/perfil/editar-perfil' as any);
+                              router.push('/(protected)/editar-perfil' as any);
                             },
                           },
                         ]

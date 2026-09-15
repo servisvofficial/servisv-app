@@ -11,7 +11,17 @@ const mapRequestFromDB = (dbRequest: any): AvailableRequest => {
     subcategory: dbRequest.subcategory || undefined,
     title: dbRequest.title,
     description: dbRequest.description,
-    location: dbRequest.location,
+    location: typeof dbRequest.location === 'string'
+      ? (() => {
+          try {
+            // Attempt to parse if it's a JSON string
+            const parsed = JSON.parse(dbRequest.location);
+            return parsed.address ? parsed : { address: dbRequest.location };
+          } catch (e) {
+            return { address: dbRequest.location };
+          }
+        })()
+      : dbRequest.location || { address: 'Dirección no disponible' },
     coordinates: dbRequest.coordinates
       ? {
           lat: dbRequest.coordinates.lat,

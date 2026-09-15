@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -9,6 +10,7 @@ import { useTheme } from "@/common/providers/ThemeProvider";
 import {
   getCategoryIcon,
   getCategoryColor,
+  getCategoriasPopulares,
 } from "@/common/utils/categoryIcons";
 import { useProviderCounts } from "@/features/providers";
 
@@ -23,8 +25,11 @@ export function HomeCliente() {
   // Calcular padding bottom para que el contenido llegue hasta el borde de las tabs
   const scrollViewPaddingBottom = 70 + Math.max(insets.bottom, 8); // Solo la altura del tab bar, sin extra
 
-  // Mostrar solo las primeras 6 categorías como populares
-  const categoriasPopulares = categories.slice(0, 6);
+  // Filtrar y ordenar las categorías populares solicitadas
+  const categoriasPopulares = useMemo(
+    () => getCategoriasPopulares(categories, 6),
+    [categories]
+  );
   
   // Obtener conteos de proveedores para las categorías populares
   const categoryNames = categoriasPopulares.map((cat) => cat.name);
@@ -70,7 +75,7 @@ export function HomeCliente() {
               <View className="px-5 mb-4">
                 <TouchableOpacity
                   className="bg-blue-50 rounded-2xl p-4 border border-blue-200"
-                  onPress={() => router.push("/(protected)/(mainTabs)/perfil/editar-perfil" as any)}
+                  onPress={() => router.push("/(protected)/editar-perfil" as any)}
                   activeOpacity={0.7}
                 >
                   <View className="flex-row items-center justify-between">
@@ -255,10 +260,20 @@ export function HomeCliente() {
                           borderColor: colors.border 
                         }}
                         onPress={() => {
-                          router.push({
-                            pathname: "/(protected)/(mainTabs)/servicios",
-                            params: { categoria: categoria.name },
-                          } as any);
+                          if (categoria.id) {
+                            router.push({
+                              pathname: "/(protected)/(mainTabs)/servicios/subcategorias" as any,
+                              params: {
+                                categoryId: String(categoria.id),
+                                categoryName: categoria.name,
+                              },
+                            });
+                          } else {
+                            router.push({
+                              pathname: "/(protected)/(mainTabs)/servicios",
+                              params: { categoria: categoria.name },
+                            } as any);
+                          }
                         }}
                         activeOpacity={0.7}
                       >

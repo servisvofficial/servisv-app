@@ -113,7 +113,7 @@ export default function ConfiguracionScreen() {
           titulo: "Editar Perfil",
           tieneFlecha: true,
           onPress: () =>
-            router.push("/(protected)/(mainTabs)/perfil/editar-perfil" as any),
+            router.push("/(protected)/editar-perfil" as any),
         },
         {
           id: "1",

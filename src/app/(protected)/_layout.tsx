@@ -52,6 +52,12 @@ const ProtectedLayout = () => {
         }}
       />
       <Stack.Screen
+        name="editar-perfil"
+        options={{ 
+          presentation: "fullScreenModal",
+        }}
+      />
+      <Stack.Screen
         name="detalle-solicitud-disponible"
         options={{ 
           animation: "slide_from_bottom",

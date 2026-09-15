@@ -37,7 +37,7 @@ export default function PerfilScreen() {
       setReviewsLoading(true);
       const { data: reviewsData, error } = await supabase
         .from('reviews')
-        .select('id, rating, comment, created_at, reviewer_id')
+        .select('id, rating, comment, created_at, reviewer_id, custom_reviewer_name')
         .eq('reviewed_id', id)
         .eq('is_visible', true)
         .order('created_at', { ascending: false });
@@ -61,7 +61,7 @@ export default function PerfilScreen() {
             rating: typeof r.rating === 'number' ? r.rating : parseFloat(r.rating) || 0,
             comment: r.comment || null,
             created_at: r.created_at,
-            reviewer_name: namesMap[r.reviewer_id] || 'Usuario',
+            reviewer_name: r.custom_reviewer_name || namesMap[r.reviewer_id] || 'Usuario',
           }))
         );
       } else {

@@ -91,12 +91,12 @@ servisv-app/
 
 ## 🎯 Categorías Populares
 
-1. **Fontanería** 🔧 - 50+ proveedores
-2. **Electricidad** ⚡ - 45+ proveedores
-3. **Limpieza** 🧹 - 80+ proveedores
-4. **Jardinería** 🌿 - 30+ proveedores
-5. **Pintura** 🎨 - 25+ proveedores
-6. **Carpintería** 🔨 - 20+ proveedores
+1. **Limpieza** 🧹 - 80+ proveedores
+2. **Plomería** 🔧 - 50+ proveedores
+3. **Electricidad** ⚡ - 45+ proveedores
+4. **Cámaras de Seguridad** 📹 - 25+ proveedores
+5. **Fotografía y Video** 📷 - 20+ proveedores
+6. **Cerrajería** 🔑 - 30+ proveedores
 
 ## 🔧 Tecnologías
 

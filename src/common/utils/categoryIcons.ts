@@ -28,6 +28,7 @@ export const categoryIcons: Record<string, keyof typeof MaterialIcons.glyphMap> 
   // Nuevas categorías (iconos coherentes con el servicio)
   'Sastrería': 'content-cut',
   'Fotografía y Video': 'photo-camera',
+  'Fotografía': 'photo-camera',
   'Enfermería': 'vaccines',
   'Informáticos': 'computer',
   'Contadores': 'account-balance',
@@ -36,6 +37,12 @@ export const categoryIcons: Record<string, keyof typeof MaterialIcons.glyphMap> 
   // Fallback (solo para categorías sin mapeo)
   'default': 'category',
 };
+
+export {
+  POPULAR_CATEGORY_NAMES,
+  getCategoriasPopulares,
+  normalizeCategoryName,
+} from './popularCategories';
 
 /**
  * Mapeo de palabras clave a iconos para categorías sin icono definido
@@ -118,7 +125,9 @@ const keywordToIconMap: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'cosmético': 'spa',
   'belleza': 'spa',
   'estética': 'spa',
-  'cámara': 'security',
+  'cámaras': 'security',
+  'cámaras de seguridad': 'security',
+  'cámara de seguridad': 'security',
   'seguridad': 'security',
   'cerrajería': 'vpn-key',
   'cerrajero': 'vpn-key',
@@ -218,6 +227,7 @@ export const categoryColors: Record<string, string> = {
   'Médicos Generales': '#10B981',
   'Sastrería': '#7C3AED',
   'Fotografía y Video': '#0EA5E9',
+  'Fotografía': '#0EA5E9',
   'Enfermería': '#059669',
   'Informáticos': '#4F46E5',
   'Contadores': '#0369A1',

@@ -54,7 +54,14 @@ export const getClientRequests = async (
       serviceCategory: request.service_category,
       subcategory: request.subcategory || undefined,
       location: typeof request.location === 'string' 
-        ? { address: request.location } 
+        ? (() => {
+            try {
+              const parsed = JSON.parse(request.location);
+              return parsed.address ? parsed : { address: request.location };
+            } catch {
+              return { address: request.location };
+            }
+          })()
         : request.location,
       coordinates: request.coordinates || undefined,
       photos: request.photos || [],

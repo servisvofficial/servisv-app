@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SearchBar } from '@/common/components';
 import { useTheme } from '@/common/providers/ThemeProvider';
 import { useAvailableRequests } from '@/features/solicitudes';
+import { RequestAddress } from '@/features/solicitudes/components';
 
 export default function SolicitudesDisponiblesScreen() {
   const router = useRouter();
@@ -100,72 +101,7 @@ export default function SolicitudesDisponiblesScreen() {
               />
             </View>
 
-            {/* Filtros */}
-            <View className="px-5 mb-4 flex-row gap-3">
-              <TouchableOpacity
-                className="rounded-xl overflow-hidden flex-row items-center"
-                activeOpacity={0.7}
-              >
-                <LinearGradient
-                  colors={['#4F46E5', '#EC4899']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ 
-                    paddingHorizontal: 16, 
-                    paddingVertical: 12, 
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderRadius: 12
-                  }}
-                >
-                  <MaterialIcons name="category" size={18} color="#FFFFFF" />
-                  <Text className="text-white font-medium text-sm ml-2">Categoría</Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={18} color="#FFFFFF" />
-                </LinearGradient>
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                className="rounded-xl overflow-hidden flex-row items-center"
-                activeOpacity={0.7}
-              >
-                <LinearGradient
-                  colors={['#4F46E5', '#EC4899']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ 
-                    paddingHorizontal: 16, 
-                    paddingVertical: 12, 
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    borderRadius: 12
-                  }}
-                >
-                  <MaterialIcons name="location-on" size={18} color="#FFFFFF" />
-                  <Text className="text-white font-medium text-sm ml-2">Ubicación</Text>
-                  <MaterialIcons name="keyboard-arrow-down" size={18} color="#FFFFFF" />
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="rounded-xl overflow-hidden"
-                activeOpacity={0.7}
-              >
-                <LinearGradient
-                  colors={['#4F46E5', '#EC4899']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={{ 
-                    width: 48,
-                    height: 48,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 12
-                  }}
-                >
-                  <MaterialIcons name="attach-money" size={20} color="#FFFFFF" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
 
           {/* Estado de carga */}
           {isLoading && (
@@ -308,9 +244,11 @@ function RequestCard({ solicitud, router, colors, formatDate }: RequestCardProps
 
       <View className="flex-row items-center mb-2">
         <MaterialIcons name="location-on" size={14} color={colors.textSecondary} />
-        <Text className="text-xs ml-1" style={{ color: colors.textSecondary }}>
-          {solicitud.location}
-        </Text>
+        <RequestAddress 
+          className="text-xs ml-1" 
+          style={{ color: colors.textSecondary }}
+          locationString={typeof solicitud.location === 'object' ? solicitud.location?.address : solicitud.location}
+        />
       </View>
 
       <View className="flex-row items-center justify-between mb-3">

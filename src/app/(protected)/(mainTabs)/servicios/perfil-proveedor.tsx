@@ -1,4 +1,5 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image as RNImage } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -44,7 +45,7 @@ export default function PerfilProveedorScreen() {
       setReviewsLoading(true);
       const { data: reviewsData, error } = await supabase
         .from('reviews')
-        .select('id, rating, comment, created_at, reviewer_id')
+        .select('id, rating, comment, created_at, reviewer_id, custom_reviewer_name')
         .eq('reviewed_id', id)
         .eq('is_visible', true)
         .order('created_at', { ascending: false });
@@ -68,7 +69,7 @@ export default function PerfilProveedorScreen() {
             rating: typeof r.rating === 'number' ? r.rating : parseFloat(r.rating) || 0,
             comment: r.comment || null,
             created_at: r.created_at,
-            reviewer_name: namesMap[r.reviewer_id] || 'Usuario',
+            reviewer_name: r.custom_reviewer_name || namesMap[r.reviewer_id] || 'Usuario',
           }))
         );
       } else {
@@ -97,6 +98,7 @@ export default function PerfilProveedorScreen() {
   const serviceCategories = provider?.service_categories || [];
   const level = provider?.provider_level;
   const recurrenceRate = provider?.recurrence_rate || 0;
+  const favoriteAmongClients = provider?.favorite_among_clients || level === 'oro';
 
   return (
     <LinearGradient
@@ -149,7 +151,7 @@ export default function PerfilProveedorScreen() {
               ) : (
                 <>
                   {profilePic ? (
-                    <Image
+                    <RNImage
                       source={{ uri: profilePic }}
                       className="w-24 h-24 rounded-full mb-3"
                       resizeMode="cover"
@@ -177,23 +179,48 @@ export default function PerfilProveedorScreen() {
                       )}
                     </View>
                   )}
-                  {level && level !== 'none' && (
-                    <View className="mt-3 px-4 py-1 rounded-full flex-row items-center justify-center border" style={{
-                      backgroundColor: level === 'platino' ? '#F3E8FF' : level === 'oro' ? '#FEF3C7' : '#F1F5F9',
-                      borderColor: level === 'platino' ? '#D8B4FE' : level === 'oro' ? '#FDE68A' : '#E2E8F0',
-                    }}>
-                      <MaterialIcons 
-                        name={level === 'platino' ? 'diamond' : 'military-tech'} 
-                        size={16} 
-                        color={level === 'platino' ? '#9333EA' : level === 'oro' ? '#D97706' : '#64748B'} 
-                      />
-                      <Text className="ml-1 text-sm font-bold capitalize" style={{
-                        color: level === 'platino' ? '#9333EA' : level === 'oro' ? '#D97706' : '#64748B'
+                  <View className="flex-row items-center justify-center mt-3 flex-wrap gap-2">
+                    {level && level !== 'none' && (
+                      <View className="px-4 py-1.5 rounded-full flex-row items-center justify-center border" style={{
+                        backgroundColor: level === 'oro' ? '#FEF9C3' : level === 'plata' ? '#F1F5F9' : '#FEF3C7', // bronce uses amber/orange tint
+                        borderColor: level === 'oro' ? '#FDE047' : level === 'plata' ? '#CBD5E1' : '#FCD34D',
                       }}>
-                        Nivel {level}
-                      </Text>
-                    </View>
-                  )}
+                        <Image 
+                          source={
+                            level === 'oro' 
+                              ? require('../../../../../assets/images/oro.svg')
+                              : level === 'plata' 
+                                ? require('../../../../../assets/images/plata.svg')
+                                : require('../../../../../assets/images/bronce.svg')
+                          } 
+                          style={{ width: 16, height: 16 }} 
+                          contentFit="contain"
+                        />
+                        <Text className="ml-1.5 text-sm font-bold capitalize" style={{
+                          color: level === 'oro' ? '#A16207' : level === 'plata' ? '#475569' : '#B45309'
+                        }}>
+                          Nivel {level}
+                        </Text>
+                      </View>
+                    )}
+                    {favoriteAmongClients && (
+                      <View 
+                        className="px-4 py-1.5 rounded-full flex-row items-center justify-center bg-white border border-gray-200"
+                        style={{
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 1.5 },
+                          shadowOpacity: 0.08,
+                          shadowRadius: 2,
+                          elevation: 2
+                        }}
+                      >
+                        <MaterialIcons name="workspace-premium" size={16} color="#111827" />
+                        <Text className="ml-1 text-sm font-bold text-gray-900">
+                          Favorito entre clientes
+                        </Text>
+                      </View>
+                    )}
+                  </View>
                 </>
               )}
             </View>

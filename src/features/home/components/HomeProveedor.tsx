@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header, SearchBar, CategoriaCard } from '@/common/components';
 import { useRequests, useUserData, useUserStats } from '@/common/hooks';
 import { useTheme } from '@/common/providers/ThemeProvider';
-import { getCategoryIcon, getCategoryColor } from '@/common/utils/categoryIcons';
+import { getCategoryIcon, getCategoryColor, getCategoriasPopulares } from '@/common/utils/categoryIcons';
 import { useAvailableRequests, useProviderQuotes } from '@/features/solicitudes';
 import { useProviderCounts } from '@/features/providers';
 
@@ -23,8 +24,11 @@ export function HomeProveedor() {
   // Calcular padding bottom para que el contenido llegue hasta el borde de las tabs
   const scrollViewPaddingBottom = 70 + Math.max(insets.bottom, 8); // Solo la altura del tab bar, sin extra
 
-  // Mostrar solo las primeras 4 categorías como populares
-  const categoriasPopulares = categories.slice(0, 4);
+  // Filtrar y ordenar las categorías populares solicitadas
+  const categoriasPopulares = useMemo(
+    () => getCategoriasPopulares(categories, 6),
+    [categories]
+  );
   
   // Obtener conteos de proveedores para las categorías populares
   const categoryNames = categoriasPopulares.map((cat) => cat.name);
@@ -64,7 +68,7 @@ export function HomeProveedor() {
             <View className="px-5 mb-4">
               <TouchableOpacity
                 className="bg-amber-50 rounded-2xl p-4 border border-amber-200"
-                onPress={() => router.push("/(protected)/(mainTabs)/perfil/editar-perfil" as any)}
+                onPress={() => router.push("/(protected)/editar-perfil" as any)}
                 activeOpacity={0.8}
               >
                 <View className="flex-row items-center">
@@ -204,10 +208,20 @@ export function HomeProveedor() {
                       key={categoria.id}
                       className="w-[48%] mb-4 p-4 bg-white rounded-2xl border border-gray-200"
                       onPress={() => {
-                        router.push({
-                          pathname: '/(protected)/(mainTabs)/servicios',
-                          params: { categoria: categoria.name }
-                        } as any);
+                        if (categoria.id) {
+                          router.push({
+                            pathname: '/(protected)/(mainTabs)/servicios/subcategorias' as any,
+                            params: {
+                              categoryId: String(categoria.id),
+                              categoryName: categoria.name,
+                            },
+                          });
+                        } else {
+                          router.push({
+                            pathname: '/(protected)/(mainTabs)/servicios',
+                            params: { categoria: categoria.name },
+                          } as any);
+                        }
                       }}
                       activeOpacity={0.7}
                     >

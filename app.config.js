@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "ServiSV",
     slug: "servisv-app",
-    version: "1.0.7",
+    version: "1.0.10",
     extra: {
       eas: {
         projectId: "0858e9b8-c95d-4547-9d0e-05f3557283f6",
