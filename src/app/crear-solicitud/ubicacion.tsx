@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Platform, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
@@ -188,7 +188,11 @@ export default function CreateRequestStep3Screen() {
   return (
     <LinearGradient colors={[colors.gradientStart, colors.gradientEnd]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={{ flex: 1 }}>
       <SafeAreaView className="flex-1">
-        <HeaderCreateRequestSteps currentStep={3} totalSteps={6} title="Crear Solicitud" />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <HeaderCreateRequestSteps currentStep={3} totalSteps={6} title="Crear Solicitud" />
         <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View className="mb-4">
             <Text className="text-lg font-bold mb-2" style={{ color: colors.text }}>Selecciona la ubicación</Text>
@@ -286,6 +290,7 @@ export default function CreateRequestStep3Screen() {
             </TouchableOpacity>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
   );

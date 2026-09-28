@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -64,13 +64,22 @@ const PersonalData = () => {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1">
-        <HeaderRegisterSteps
-          currentStep={1}
-          totalSteps={isProvider ? 4 : 2}
-          title={isProvider ? "Regístrate como Proveedor" : "Crear una Cuenta"}
-        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <HeaderRegisterSteps
+            currentStep={1}
+            totalSteps={isProvider ? 4 : 2}
+            title={isProvider ? "Regístrate como Proveedor" : "Crear una Cuenta"}
+          />
 
-        <ScrollView className="flex-1 px-5 pt-6">
+          <ScrollView
+            className="flex-1 px-5 pt-6"
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 24 }}
+          >
           {/* Nombre y Apellido en fila */}
           <View className="flex-row mb-4 gap-3">
             <View className="flex-1">
@@ -238,6 +247,7 @@ const PersonalData = () => {
             )}
           </TouchableOpacity>
         </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
   );

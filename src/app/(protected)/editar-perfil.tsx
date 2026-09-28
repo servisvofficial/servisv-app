@@ -9,6 +9,7 @@ import {
   Alert,
   Platform,
   Modal,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -637,11 +638,16 @@ export default function EditarPerfilScreen() {
           <View style={{ width: 24 }} />
         </View>
 
-        <ScrollView 
-          showsVerticalScrollIndicator={false} 
-          className="flex-1"
-          contentContainerStyle={{ paddingBottom: scrollViewPaddingBottom }}
-          keyboardShouldPersistTaps="handled"
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+          style={{ flex: 1 }}
+        >
+          <ScrollView 
+            showsVerticalScrollIndicator={false} 
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: scrollViewPaddingBottom }}
+            keyboardShouldPersistTaps="handled"
           onScrollBeginDrag={() => {
             // Cerrar sugerencias al hacer scroll
             setShowPredictions(false);
@@ -1235,6 +1241,7 @@ export default function EditarPerfilScreen() {
             </View>
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </View>
 
       {/* Modal para seleccionar categoría */}

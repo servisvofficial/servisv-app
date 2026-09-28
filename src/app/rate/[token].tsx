@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { supabase } from '@/common/lib/supabase/supabaseClient';
@@ -105,7 +105,11 @@ export default function RateServiceScreen() {
       colors={[colors.gradientStart, colors.gradientEnd]}
       style={{ flex: 1 }}
     >
-      <ScrollView className="flex-1 p-6">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView className="flex-1 p-6" keyboardShouldPersistTaps="handled">
         <View className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 items-center mt-12">
           <View className="w-16 h-16 bg-indigo-100 rounded-full items-center justify-center mb-4">
             <MaterialIcons name="star" size={32} color="#4F46E5" />
@@ -154,6 +158,7 @@ export default function RateServiceScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }

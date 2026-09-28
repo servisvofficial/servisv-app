@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -97,36 +98,41 @@ export function QuoteModal({
             borderTopRightRadius: 24,
           }}
         >
-          <View style={{ backgroundColor: "transparent", flex: 1 }}>
-            {/* Header */}
-            <View
-              className="flex-row items-center justify-between px-5 py-4 border-b bg-white/50"
-              style={{ borderBottomColor: colors.border }}
-            >
-              <Text
-                className="text-xl font-bold"
-                style={{ color: colors.text }}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+          >
+            <View style={{ backgroundColor: "transparent", flex: 1 }}>
+              {/* Header */}
+              <View
+                className="flex-row items-center justify-between px-5 py-4 border-b bg-white/50"
+                style={{ borderBottomColor: colors.border }}
               >
-                Enviar Presupuesto
-              </Text>
-              <TouchableOpacity
-                onPress={handleClose}
-                disabled={isLoading}
-                activeOpacity={0.7}
-              >
-                <MaterialIcons
-                  name="close"
-                  size={24}
-                  color={colors.textSecondary}
-                />
-              </TouchableOpacity>
-            </View>
+                <Text
+                  className="text-xl font-bold"
+                  style={{ color: colors.text }}
+                >
+                  Enviar Presupuesto
+                </Text>
+                <TouchableOpacity
+                  onPress={handleClose}
+                  disabled={isLoading}
+                  activeOpacity={0.7}
+                >
+                  <MaterialIcons
+                    name="close"
+                    size={24}
+                    color={colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              style={{ flex: 1 }}
-              contentContainerStyle={{ paddingBottom: 20 }}
-            >
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              >
               <View className="px-5 py-6 space-y-4">
                 {/* Precio */}
                 <View>
@@ -287,8 +293,9 @@ export function QuoteModal({
               </TouchableOpacity>
             </View>
           </View>
-        </LinearGradient>
-      </View>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </View>
     </Modal>
   );
 }

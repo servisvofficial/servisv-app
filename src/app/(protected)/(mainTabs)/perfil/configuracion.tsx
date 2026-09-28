@@ -16,6 +16,7 @@ import { useState } from "react";
 import { MyView } from "@/common/components";
 import { useTheme } from "@/common/providers/ThemeProvider";
 import { supabase } from "@/common/lib/supabase/supabaseClient";
+import Constants from "expo-constants";
 
 export default function ConfiguracionScreen() {
   const router = useRouter();
@@ -243,12 +244,12 @@ export default function ConfiguracionScreen() {
                         >
                           {item.titulo}
                         </Text>
-                        {item.subtitulo && (
+                        {(item as any).subtitulo && (
                           <Text
                             className="text-sm mt-1"
                             style={{ color: colors.textSecondary }}
                           >
-                            {item.subtitulo}
+                            {(item as any).subtitulo}
                           </Text>
                         )}
                       </View>
@@ -313,7 +314,7 @@ export default function ConfiguracionScreen() {
             {/* Versión */}
             <View className="px-5 mt-6 items-center">
               <Text className="text-xs" style={{ color: colors.textSecondary }}>
-                ServiSV v1.0.2
+                ServiSV v{Constants.expoConfig?.version ?? "1.0.11"}
               </Text>
             </View>
           </View>

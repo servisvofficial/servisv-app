@@ -1,7 +1,7 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { IconSymbol } from '@/common/components/ui/IconSymbol';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -212,13 +212,17 @@ const ServiceZone = () => {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1">
-        <HeaderRegisterSteps
-          currentStep={isProvider ? 4 : 2}
-          totalSteps={isProvider ? 4 : 2}
-          title={isProvider ? "Regístrate como Proveedor" : "Crear una Cuenta"}
-        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <HeaderRegisterSteps
+            currentStep={isProvider ? 4 : 2}
+            totalSteps={isProvider ? 4 : 2}
+            title={isProvider ? "Regístrate como Proveedor" : "Crear una Cuenta"}
+          />
 
-        <ScrollView className="flex-1 px-5 pt-6" keyboardShouldPersistTaps="handled">
+          <ScrollView className="flex-1 px-5 pt-6" keyboardShouldPersistTaps="handled">
           {/* Para Clientes: Dirección y Documentos */}
           {isClient && (
             <>
@@ -685,6 +689,7 @@ const ServiceZone = () => {
           </Text>
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
   );

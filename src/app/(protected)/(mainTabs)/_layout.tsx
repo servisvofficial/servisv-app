@@ -66,6 +66,7 @@ export default function MainTabsLayout() {
             };
 
         return {
+          tabBarHideOnKeyboard: true,
           tabBarActiveTintColor: ACTIVE_COLOR,
           tabBarInactiveTintColor: INACTIVE_COLOR,
           headerShown: false,

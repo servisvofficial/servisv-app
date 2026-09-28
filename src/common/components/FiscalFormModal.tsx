@@ -10,6 +10,7 @@ import {
   Platform,
   Dimensions,
   FlatList,
+  KeyboardAvoidingView,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -214,50 +215,55 @@ export function FiscalFormModal({
 
   const sheetContent = (
     <View style={{ flex: 1, backgroundColor: embedded ? "transparent" : "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}>
-      <View
-        style={{
-          maxHeight: Dimensions.get("window").height * 0.92,
-          minHeight: Dimensions.get("window").height * 0.6,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-          overflow: "hidden",
-          backgroundColor: "#FFFFFF",
-        }}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ width: "100%" }}
       >
-        <LinearGradient
-            colors={["#FFFFFF", "#F5F3FF"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={{ flex: 1, minHeight: Dimensions.get("window").height * 0.6 }}
-          >
-            <View style={{ flex: 1 }}>
-            <View
-              className="px-5 py-4 border-b"
-              style={{ borderBottomColor: "#E5E7EB", backgroundColor: "#FFFFFF" }}
+        <View
+          style={{
+            maxHeight: Dimensions.get("window").height * 0.92,
+            minHeight: Dimensions.get("window").height * 0.6,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            overflow: "hidden",
+            backgroundColor: "#FFFFFF",
+          }}
+        >
+          <LinearGradient
+              colors={["#FFFFFF", "#F5F3FF"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={{ flex: 1, minHeight: Dimensions.get("window").height * 0.6 }}
             >
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-xl font-bold" style={{ color: "#111827" }}>
-                  Datos fiscales
-                </Text>
-                <TouchableOpacity onPress={onClose} disabled={isLoading}>
-                  <MaterialIcons name="close" size={24} color="#6B7280" />
-                </TouchableOpacity>
+              <View style={{ flex: 1 }}>
+              <View
+                className="px-5 py-4 border-b"
+                style={{ borderBottomColor: "#E5E7EB", backgroundColor: "#FFFFFF" }}
+              >
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="text-xl font-bold" style={{ color: "#111827" }}>
+                    Datos fiscales
+                  </Text>
+                  <TouchableOpacity onPress={onClose} disabled={isLoading}>
+                    <MaterialIcons name="close" size={24} color="#6B7280" />
+                  </TouchableOpacity>
+                </View>
+                <View className="items-center">
+                  <Text className="text-2xl font-extrabold tracking-tight" style={{ color: "#111827" }}>
+                    ServiSV
+                  </Text>
+                </View>
               </View>
-              <View className="items-center">
-                <Text className="text-2xl font-extrabold tracking-tight" style={{ color: "#111827" }}>
-                  ServiSV
-                </Text>
-              </View>
-            </View>
 
-            <ScrollView
-              style={{ flex: 1 }}
-              contentContainerStyle={{
-                padding: 20,
-                paddingBottom: Math.max(insets.bottom, 12) + 28,
-              }}
-              showsVerticalScrollIndicator={false}
-            >
+              <ScrollView
+                style={{ flex: 1 }}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{
+                  padding: 20,
+                  paddingBottom: Math.max(insets.bottom, 12) + 28,
+                }}
+                showsVerticalScrollIndicator={false}
+              >
               <Text className="text-sm mb-4" style={{ color: "#6B7280" }}>
                 Se generará Crédito Fiscal (CCF) si indicas NRC; si no, Factura Consumidor Final.
               </Text>
@@ -613,7 +619,8 @@ export function FiscalFormModal({
           </View>
         </LinearGradient>
       </View>
-    </View>
+    </KeyboardAvoidingView>
+  </View>
   );
 
   if (embedded) {

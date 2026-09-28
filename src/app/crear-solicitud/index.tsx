@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -29,13 +29,17 @@ export default function CreateRequestStep1Screen() {
       style={{ flex: 1 }}
     >
       <SafeAreaView className="flex-1">
-        <HeaderCreateRequestSteps
-          currentStep={1}
-          totalSteps={6}
-          title="Crear Solicitud"
-        />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <HeaderCreateRequestSteps
+            currentStep={1}
+            totalSteps={6}
+            title="Crear Solicitud"
+          />
 
-        <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false}>
+          <ScrollView className="flex-1 px-5 pt-6" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View className="mb-6">
             <Text className="text-sm mb-2 font-medium" style={{ color: colors.textSecondary }}>
               Título de la solicitud *
@@ -95,6 +99,7 @@ export default function CreateRequestStep1Screen() {
             </TouchableOpacity>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
   );

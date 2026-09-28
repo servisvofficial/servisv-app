@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, Text, TextInput } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ClerkProvider, useAuth } from '@clerk/clerk-expo';
+import { ClerkProvider } from '@clerk/clerk-expo';
 import { tokenCache } from '@/common/utils/tokenCache';
 import 'react-native-reanimated';
 import '../../global.css';
@@ -31,27 +30,6 @@ if ((TextInput as unknown as TextWithDefaultProps).defaultProps == null) {
 }
 (TextInput as unknown as TextWithDefaultProps).defaultProps!.maxFontSizeMultiplier = 1.1;
 
-
-/** Redirige desde la ruta inicial según auth. Debe estar dentro de ClerkProvider. */
-function InitialRedirect() {
-  const { isLoaded, isSignedIn } = useAuth();
-  const router = useRouter();
-  const segments = useSegments();
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    const isInitialRoute = segments.length === 0 || (segments.length === 1 && segments[0] === 'index');
-    if (!isInitialRoute) return;
-    if (isSignedIn) {
-      router.replace('/(protected)/(mainTabs)/home');
-    } else {
-      router.replace('/(auth)/onboarding');
-    }
-  }, [isLoaded, isSignedIn, router, segments]);
-
-  return null;
-}
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const clerkKey = envs.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
@@ -70,7 +48,6 @@ export default function RootLayout() {
     <ClerkProvider tokenCache={tokenCache} publishableKey={clerkKey}>
       <ChatProvider>
         <ClerkSupabaseProvider>
-          <InitialRedirect />
           <SafeAreaProvider>
             <QueryProvider>
               <AppThemeProvider>

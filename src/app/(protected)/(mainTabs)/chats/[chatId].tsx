@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
+  Keyboard,
   Linking,
   Modal,
   Dimensions,
@@ -101,6 +102,39 @@ export default function ChatDetailScreen() {
 
   const messages: Message[] = chatId ? (messagesByChatId[chatId] ?? []) : [];
   const scrollViewRef = useRef<ScrollView>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // En Android la altura física real del teclado desde el borde de la pantalla
+  // es keyboardHeight + insets.bottom (compensando la barra de navegación del sistema)
+  const androidKeyboardOffset =
+    keyboardHeight > 0
+      ? keyboardHeight + insets.bottom
+      : 0;
+
+  // Escuchar teclado para ajustar padding del input y auto-scroll
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e?.endCoordinates?.height ?? 0);
+      setIsKeyboardVisible(true);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    });
+
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   // Auto-scroll al último mensaje al cargar o al llegar mensajes nuevos
   useEffect(() => {
@@ -310,7 +344,10 @@ export default function ChatDetailScreen() {
           className="flex-1"
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-          style={{ flex: 1 }}
+          style={{
+            flex: 1,
+            paddingBottom: Platform.OS === "android" ? androidKeyboardOffset : 0,
+          }}
         >
       <ScrollView 
             ref={scrollViewRef}
@@ -495,7 +532,7 @@ export default function ChatDetailScreen() {
             style={{
               backgroundColor: colors.card,
               borderTopColor: colors.border,
-              paddingBottom: Math.max(insets.bottom, 8),
+              paddingBottom: isKeyboardVisible ? 8 : Math.max(insets.bottom, 8),
             }}
           >
             {isUploading ? (
