@@ -34,6 +34,7 @@ export const categoryIcons: Record<string, keyof typeof MaterialIcons.glyphMap> 
   'Contadores': 'account-balance',
   'Programador Freelance': 'code',
   'Community Manager': 'groups',
+  'Clases': 'school',
   // Fallback (solo para categorías sin mapeo)
   'default': 'category',
 };
@@ -92,6 +93,17 @@ const keywordToIconMap: Record<string, keyof typeof MaterialIcons.glyphMap> = {
   'computadora': 'computer',
   'laptop': 'computer',
   'soporte técnico': 'computer',
+  'clases': 'school',
+  'clase': 'school',
+  'idiomas': 'school',
+  'matemáticas': 'school',
+  'matematicas': 'school',
+  'computación': 'school',
+  'computacion': 'school',
+  'profesor': 'school',
+  'tutor': 'school',
+  'educación': 'school',
+  'educacion': 'school',
   
   // Técnicos
   'plomería': 'plumbing',
@@ -233,6 +245,7 @@ export const categoryColors: Record<string, string> = {
   'Contadores': '#0369A1',
   'Programador Freelance': '#7C3AED',
   'Community Manager': '#6366F1',
+  'Clases': '#0284C7',
   'default': '#6B7280',
 };
 
