@@ -3,8 +3,7 @@ import { supabase } from "@/common/lib/supabase/supabaseClient";
 
 /**
  * Obtiene el conteo de proveedores validados por categoría.
- * Usa 3 queries planas en paralelo en lugar de N queries en serie,
- * evitando el problema de relaciones FK no registradas en el schema cache.
+ * Usa paginación para evitar el límite de 1000 filas de PostgREST.
  */
 export const useProviderCounts = (categoryNames: string[]) => {
   return useQuery<Map<string, number>, Error>({
@@ -29,35 +28,61 @@ export const useProviderCounts = (categoryNames: string[]) => {
       );
       const categoryIds = categoriesData.map((c: any) => c.id);
 
-      // Query 2 + Query 3 en paralelo
-      const [servicesResult, validatedResult] = await Promise.all([
-        // Todos los (user_id, category_id) para estas categorías
-        supabase
-          .from("user_professional_services")
-          .select("user_id, category_id")
-          .in("category_id", categoryIds),
+      // Query 2: Obtener todos los (user_id, category_id) con paginación
+      const fetchServices = async () => {
+        const allServices: Array<{ user_id: string; category_id: number }> = [];
+        let from = 0;
+        const pageSize = 1000;
+        while (true) {
+          const { data, error } = await supabase
+            .from("user_professional_services")
+            .select("user_id, category_id")
+            .in("category_id", categoryIds)
+            .range(from, from + pageSize - 1);
 
-        // Todos los user_ids de proveedores validados
-        supabase
-          .from("users")
-          .select("id")
-          .eq("is_provider", true)
-          .eq("is_validated", true)
-          .eq("is_banned", false),
+          if (error || !data || data.length === 0) break;
+          allServices.push(...data);
+          if (data.length < pageSize) break;
+          from += pageSize;
+        }
+        return allServices;
+      };
+
+      // Query 3: Obtener proveedores válidos (NO baneados) con paginación defensiva
+      const fetchValidatedUsers = async () => {
+        const allUsers: Array<{ id: string }> = [];
+        let from = 0;
+        const pageSize = 1000;
+        while (true) {
+          const { data, error } = await supabase
+            .from("users")
+            .select("id")
+            .eq("is_provider", true)
+            .eq("is_banned", false)
+            .range(from, from + pageSize - 1);
+
+          if (error || !data || data.length === 0) break;
+          allUsers.push(...data);
+          if (data.length < pageSize) break;
+          from += pageSize;
+        }
+        return allUsers;
+      };
+
+      const [services, validatedUsers] = await Promise.all([
+        fetchServices(),
+        fetchValidatedUsers(),
       ]);
 
-      if (servicesResult.error || !servicesResult.data) return countsMap;
-      if (validatedResult.error || !validatedResult.data) return countsMap;
-
-      // Set de proveedores validados para lookup O(1)
+      // Set de proveedores válidos para lookup O(1)
       const validatedIds = new Set<string>(
-        validatedResult.data.map((u: any) => u.id)
+        validatedUsers.map((u: any) => u.id)
       );
 
-      // Contar proveedores únicos validados por categoría en memoria
+      // Contar proveedores únicos válidos por categoría en memoria
       const providerSets = new Map<string, Set<string>>();
 
-      for (const row of servicesResult.data as any[]) {
+      for (const row of services) {
         if (!validatedIds.has(row.user_id)) continue;
         const catName = categoryIdToName.get(row.category_id);
         if (!catName) continue;

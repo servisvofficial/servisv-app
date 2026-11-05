@@ -9,12 +9,11 @@ export const useProviderCount = (categoryName?: string) => {
     queryKey: ["providerCount", categoryName],
     queryFn: async () => {
       if (!categoryName) {
-        // Si no hay categoría, contar todos los proveedores validados
+        // Si no hay categoría, contar todos los proveedores válidos
         const { count, error } = await supabase
           .from("users")
           .select("id", { count: "exact", head: true })
           .eq("is_provider", true)
-          .eq("is_validated", true)
           .eq("is_banned", false);
 
         if (error) {
@@ -37,41 +36,45 @@ export const useProviderCount = (categoryName?: string) => {
         return 0;
       }
 
-      // Obtener todos los user_ids que tienen esta categoría
-      const { data: services, error: servicesError } = await supabase
-        .from("user_professional_services")
-        .select("user_id")
-        .eq("category_id", categoryData.id);
+      // Obtener todos los user_ids que tienen esta categoría con paginación
+      const services: Array<{ user_id: string }> = [];
+      let from = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from("user_professional_services")
+          .select("user_id")
+          .eq("category_id", categoryData.id)
+          .range(from, from + pageSize - 1);
 
-      if (servicesError) {
-        console.error("Error al obtener servicios profesionales:", servicesError);
-        return 0;
+        if (error || !data || data.length === 0) break;
+        services.push(...data);
+        if (data.length < pageSize) break;
+        from += pageSize;
       }
 
-      if (!services || services.length === 0) {
+      if (services.length === 0) {
         return 0;
       }
 
       // Obtener IDs únicos de proveedores
-      const uniqueProviderIds = [...new Set(services.map((s) => s.user_id))];
+      const uniqueProviderIds = new Set(services.map((s) => s.user_id));
 
-      // Contar cuántos de estos son proveedores validados
-      const { count, error: countError } = await supabase
+      // Contar cuántos de estos son proveedores válidos
+      const { data: validUsers, error: countError } = await supabase
         .from("users")
-        .select("id", { count: "exact", head: true })
-        .in("id", uniqueProviderIds)
+        .select("id")
         .eq("is_provider", true)
-        .eq("is_validated", true)
         .eq("is_banned", false);
 
-      if (countError) {
+      if (countError || !validUsers) {
         console.error("Error al contar proveedores por categoría:", countError);
         return 0;
       }
 
-      return count || 0;
+      return validUsers.filter((u) => uniqueProviderIds.has(u.id)).length;
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
-    cacheTime: 1000 * 60 * 10, // 10 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos
   });
 };
