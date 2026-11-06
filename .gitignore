@@ -48,6 +48,7 @@ servisv-app-firebase-adminsdk-fbsvc-5fd240a444.json
 
 # env
 .env.local
+*.ipa
 
 # android
 android/

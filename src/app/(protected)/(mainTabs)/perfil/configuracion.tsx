@@ -314,7 +314,7 @@ export default function ConfiguracionScreen() {
             {/* Versión */}
             <View className="px-5 mt-6 items-center">
               <Text className="text-xs" style={{ color: colors.textSecondary }}>
-                ServiSV v{Constants.expoConfig?.version ?? "1.0.11"}
+                ServiSV v{Constants.expoConfig?.version ?? "1.0.12"}
               </Text>
             </View>
           </View>
